@@ -10,13 +10,20 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     
     <style>
-        :root { --primary: #1a4379; --primary-light: #e8eff6; --bg-color: #f4f6f9; --text-main: #333; --text-sub: #6c757d; }
+        :root { 
+            /* ✨ 귀여운 연초록/진녹색 테마로 전면 교체! */
+            --primary: #4caf50;       /* 메인 연초록 */
+            --primary-dark: #2e7d32;  /* 글씨용 진녹색 */
+            --primary-light: #e8f5e9; /* 아주 연한 배경용 초록 */
+            --bg-color: #ffffff;      /* 카드가 돋보이도록 배경은 깔끔한 화이트 */
+            --text-main: #333; 
+            --text-sub: #6c757d; 
+        }
         * { box-sizing: border-box; }
         
-        /* ✨ 귀여운 연초록 땡땡이 배경 패턴 적용! */
         body { 
             margin: 0; padding: 0; font-family: 'Malgun Gothic', sans-serif; display: flex; justify-content: center; 
-            background-color: #f1f8e9; /* 아주 연한 바탕 초록 */
+            background-color: #f1f8e9; 
             background-image: radial-gradient(#dcedc8 15%, transparent 16%), radial-gradient(#dcedc8 15%, transparent 16%);
             background-size: 30px 30px;
             background-position: 0 0, 15px 15px;
@@ -58,7 +65,6 @@
         .cute-calendar .flatpickr-day.selected, .cute-calendar .flatpickr-day.startRange, .cute-calendar .flatpickr-day.endRange { background: #ffb74d !important; border-color: #ffb74d !important; color: white !important; box-shadow: 0 2px 5px rgba(255,183,77,0.5); }
         .cute-calendar .flatpickr-day.inRange { background: #fff3e0 !important; border-color: #fff3e0 !important; box-shadow: -5px 0 0 #fff3e0, 5px 0 0 #fff3e0 !important; }
         .cute-calendar .flatpickr-day:hover { background: #e8f5e9 !important; }
-
         .cute-calendar .flatpickr-prev-month, .cute-calendar .flatpickr-next-month { top: 12px !important; padding: 5px !important; border-radius: 50% !important; transition: 0.2s; }
         .cute-calendar .flatpickr-prev-month { left: 15px !important; }
         .cute-calendar .flatpickr-next-month { right: 15px !important; }
@@ -68,8 +74,10 @@
         /* 플래너 뷰 */
         #planner-view { display: none; }
         .header { display: flex; justify-content: center; align-items: center; padding: 15px 20px; background: white; border-bottom: 1px solid #ddd; position: relative; }
-        .header-logo { display: flex; align-items: center; font-weight: bold; font-size: 18px; color: var(--primary); cursor: pointer; }
-        .header-logo span.icon { background: var(--primary); color: white; padding: 2px 8px; border-radius: 8px; margin-right: 8px; font-size: 14px; }
+        
+        /* ✨ 헤더 로고 색상 & 아이콘 모양 둥글게 */
+        .header-logo { display: flex; align-items: center; font-weight: 900; font-size: 19px; color: var(--primary-dark); cursor: pointer; letter-spacing: -0.5px;}
+        .header-logo span.icon { background: var(--primary); color: white; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px; font-size: 14px; box-shadow: 0 2px 4px rgba(76,175,80,0.3); }
         
         .hero-section { position: relative; height: 220px; background-image: url('https://images.unsplash.com/photo-1542931287-023b922fa89b?auto=format&fit=crop&q=80&w=800'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; color: white; }
         .hero-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)); }
@@ -82,15 +90,17 @@
         .photo-upload-btn:hover { background: rgba(0,0,0,0.7); }
 
         .tabs { display: flex; background: white; padding: 10px 20px; gap: 10px; border-bottom: 1px solid #ddd; }
-        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: bold; font-size: 15px; background: #f8f9fa; color: var(--text-sub); transition: 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;}
-        .tab-btn.active { background: var(--primary); color: white; }
+        
+        /* ✨ 탭 버튼 더 동글동글하게 */
+        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 30px; font-weight: bold; font-size: 15px; background: var(--primary-light); color: var(--primary-dark); transition: 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;}
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(76,175,80,0.3); }
 
         .date-strip { display: flex; overflow-x: auto; background: white; padding: 15px 20px; gap: 10px; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .date-strip::-webkit-scrollbar { display: none; }
         
-        /* ✨ 날짜 카드 글자 짤림 완벽 해결 (너비 확대, 간격 조정) */
-        .date-card { border: 1px solid #e0e0e0; border-radius: 12px; padding: 10px 8px; text-align: center; min-width: 68px; transition: 0.2s; cursor: pointer; box-sizing: border-box; }
-        .date-card.active { background: var(--primary); color: white; border-color: var(--primary); }
+        /* ✨ 날짜 카드 더 둥글고 귀엽게 */
+        .date-card { border: 2px solid #e0e0e0; border-radius: 20px; padding: 10px 8px; text-align: center; min-width: 68px; transition: 0.2s; cursor: pointer; box-sizing: border-box; background: white;}
+        .date-card.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(76,175,80,0.3); transform: translateY(-2px); }
         .date-card .day { font-size: 12px; margin-bottom: 3px; }
         .date-card .date { font-size: 16px; font-weight: bold; letter-spacing: -0.5px; }
         .date-card .loc { font-size: 11px; margin-top: 3px; opacity: 0.8; }
@@ -100,40 +110,49 @@
         .tab-content.active { display: block; }
 
         .schedule-item { display: flex; margin-bottom: 25px; position: relative; }
-        .schedule-item::before { content: ''; position: absolute; left: 19px; top: 35px; bottom: -35px; width: 2px; background: #dee2e6; z-index: 1; }
+        
+        /* ✨ 일정을 이어주는 세로 선을 연초록색 굵은 점선으로 변경 */
+        .schedule-item::before { content: ''; position: absolute; left: 18px; top: 35px; bottom: -35px; width: 4px; border-radius: 2px; background: #c8e6c9; z-index: 1; }
         .schedule-item:last-child::before { display: none; }
         
-        .schedule-icon { width: 40px; height: 40px; border-radius: 50%; background: #ffebee; color: #d32f2f; display: flex; align-items: center; justify-content: center; font-size: 20px; z-index: 2; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .schedule-icon { width: 40px; height: 40px; border-radius: 50%; background: #ffebee; color: #d32f2f; display: flex; align-items: center; justify-content: center; font-size: 20px; z-index: 2; position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
         .schedule-icon.숙소 { background: #e3f2fd; color: #1976d2; }
         .schedule-icon.식당 { background: #fff3e0; color: #f57c00; }
         .schedule-icon.공항 { background: #e8eaf6; color: #3f51b5; }
         
-        .schedule-card { margin-left: 15px; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); flex: 1; border: 1px solid #f0f0f0; }
-        .s-time { font-weight: bold; color: var(--primary); font-size: 16px; margin-bottom: 5px; }
-        .s-title { font-size: 17px; font-weight: bold; margin-bottom: 10px; }
-        .s-btn { display: flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 20px; border: 1px solid #e0e0e0; font-size: 12px; background: white; cursor: pointer;}
+        /* ✨ 일정 카드 동글동글하게 */
+        .schedule-card { margin-left: 15px; background: white; padding: 15px 18px; border-radius: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); flex: 1; border: 1px solid #f0f0f0; }
+        .s-time { font-weight: 900; color: var(--primary); font-size: 16px; margin-bottom: 5px; }
+        .s-title { font-size: 17px; font-weight: bold; margin-bottom: 10px; color: var(--text-main); }
+        .s-btn { display: flex; align-items: center; gap: 4px; padding: 8px 12px; border-radius: 25px; border: 1px solid #e0e0e0; font-size: 12px; background: white; cursor: pointer; transition: 0.2s; font-weight: bold; color: var(--text-sub);}
+        .s-btn:hover { background: #f4f6f9; }
         
-        #map-container { height: 500px; width: 100%; border-radius: 15px; border: 2px solid #e0e0e0; overflow: hidden; position: relative; }
+        #map-container { height: 500px; width: 100%; border-radius: 24px; border: 3px solid #e8f5e9; overflow: hidden; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
         .moving-character { z-index: 1000 !important; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3)); }
         
-        .fab-add { position: fixed; bottom: 30px; right: calc(50% - 280px); background: var(--primary); color: white; width: 56px; height: 56px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: none; z-index: 99; transition: 0.3s; cursor: pointer;}
+        /* ✨ 플로팅 버튼(FAB) 디자인 완벽 적용 */
+        .fab-add { position: fixed; bottom: 30px; right: calc(50% - 280px); background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 32px; box-shadow: 0 6px 16px rgba(76,175,80,0.4); border: none; z-index: 99; transition: 0.3s; cursor: pointer;}
+        .fab-add:hover { transform: scale(1.05); background: var(--primary-dark); }
         @media(max-width: 600px) { .fab-add { right: 20px; } }
 
+        /* ✨ 모달(입력창) 동글동글하게 */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: none; justify-content: center; align-items: center; padding: 20px; }
-        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; position: relative; }
+        .modal-content { background: white; padding: 25px 20px; border-radius: 30px; width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; position: relative; }
         .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 28px; color: #888; cursor: pointer; z-index: 100; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; line-height: 1; }
-        .modal-title { margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 8px; margin-bottom: 20px; padding-right: 30px; }
+        .modal-title { margin-top: 0; color: var(--primary-dark); display: flex; align-items: center; gap: 8px; margin-bottom: 20px; padding-right: 30px; font-weight: 900;}
         
         .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 12px; color: var(--text-sub); margin-bottom: 5px; font-weight: bold; }
-        .input-group input, .input-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; background: white; font-family: inherit; }
-        .btn-submit { width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer;}
+        .input-group label { display: block; font-size: 12px; color: var(--primary-dark); margin-bottom: 5px; font-weight: bold; }
+        .input-group input, .input-group select { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 16px; font-size: 15px; background: #fafafa; font-family: inherit; transition: 0.2s;}
+        .input-group input:focus, .input-group select:focus { outline: none; border-color: var(--primary); background: white; }
         
-        .pac-container { z-index: 10005 !important; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-family: 'Malgun Gothic', sans-serif; border: none; }
-        .pac-item { padding: 10px; font-size: 14px; cursor: pointer; }
-        .pac-item:hover { background-color: #f4f6f9; }
+        .btn-submit { width: 100%; background: var(--primary); color: white; padding: 15px; border: none; border-radius: 20px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(76,175,80,0.3); transition: 0.2s;}
+        .btn-submit:hover { background: var(--primary-dark); }
+        
+        .pac-container { z-index: 10005 !important; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); font-family: 'Malgun Gothic', sans-serif; border: none; overflow: hidden;}
+        .pac-item { padding: 12px 10px; font-size: 14px; cursor: pointer; }
+        .pac-item:hover { background-color: var(--primary-light); }
 
-        /* ✨ 모바일 반응형 디자인 교정 (카드 너비 포함) */
         @media (max-width: 600px) {
             .hero-title { font-size: 20px; }
             .hero-date { font-size: 11.5px; }
@@ -176,9 +195,9 @@
             <input type="file" accept="image/*" style="display:none;" onchange="changeHeroImage(event)">
         </label>
         <div class="hero-content">
-            <div class="hero-subtitle">쫑민 커플 · 2026</div>
+            <div class="hero-subtitle" style="color:#dcedc8;">쫑민 커플 · 2026</div>
             <h1 class="hero-title" id="hero-title-text">나트랑 여행</h1>
-            <div class="hero-date" id="hero-date-text">11월 18일 (수) - 11월 22일 (일) · 4박 5일</div>
+            <div class="hero-date" id="hero-date-text" style="color:#f1f8e9;">11월 18일 (수) - 11월 22일 (일) · 4박 5일</div>
         </div>
     </div>
 
@@ -195,8 +214,8 @@
         </div>
         <div id="tab-overview" class="tab-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h4 style="margin:0; color:#444;">오늘의 여정 <span style="color:var(--primary)">실제 이동 경로</span></h4>
-                <button class="s-btn" style="background:#ff9800;color:white;border:none;font-weight:bold;cursor:pointer;" onclick="playRouteAnimation()">
+                <h4 style="margin:0; color:var(--primary-dark);">오늘의 여정 <span style="color:var(--primary)">실제 이동 경로</span></h4>
+                <button class="s-btn" style="background:#ffb74d;color:white;border:none;font-weight:bold;cursor:pointer;" onclick="playRouteAnimation()">
                     <span class="material-symbols-outlined" style="font-size:16px;">play_circle</span> 다시보기
                 </button>
             </div>
@@ -235,12 +254,12 @@
         
         <div class="input-group" style="position:relative;">
             <label>장소 검색 (구글 맵)</label>
-            <input type="text" id="map-search-input" placeholder="여기에 검색어를 입력하세요" style="border: 2px solid var(--primary);">
+            <input type="text" id="map-search-input" placeholder="여기에 검색어를 입력하세요" style="border: 2px solid var(--primary); background: white;">
         </div>
         
         <input type="hidden" id="place_name">
 
-        <div id="mini-map" style="height: 150px; width: 100%; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px; cursor: crosshair;"></div>
+        <div id="mini-map" style="height: 150px; width: 100%; border-radius: 16px; border: 2px solid #e0e0e0; margin-bottom: 10px; cursor: crosshair;"></div>
         
         <div style="display:flex; gap:10px;">
             <div class="input-group" style="flex:1;"><input type="number" id="lat" placeholder="위도" readonly style="background:#f0f0f0;"></div>
@@ -283,7 +302,6 @@
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U&libraries=places&callback=initAutocomplete" async defer></script>
 
 <script>
-    // 💡 ngrok 접속 주소 반영 완료!
     const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev/api"; 
     
     let CURRENT_TRIP = "";
@@ -442,7 +460,7 @@
     let tempMarker;
 
     const characterIcon = L.divIcon({
-        html: '<div style="background:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:2px solid #1a4379; font-size:18px;">🚶</div>',
+        html: '<div style="background:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:2px solid #4caf50; font-size:18px;">🚶</div>',
         className: 'moving-character', iconSize: [30, 30], iconAnchor: [15, 15]
     });
 
@@ -485,7 +503,7 @@
         const listDiv = document.getElementById('schedule-list');
         listDiv.innerHTML = '';
         if(places.length === 0) {
-            listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">이 날짜에는 일정이 없어요.<br>+ 버튼을 눌러보세요!</div>`; return;
+            listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:#999; font-weight:bold;">이 날짜에는 일정이 없어요.<br>우측 하단의 + 버튼을 눌러보세요!</div>`; return;
         }
         const icons = { '명소': 'photo_camera', '식당': 'restaurant', '카페': 'local_cafe', '숙소': 'hotel', '공항': 'flight' };
         places.forEach(p => {
@@ -542,7 +560,8 @@
             if(data.code === 'Ok' && data.routes.length > 0) {
                 detailedRouteLatLngs = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
                 if(polyline) mainMap.removeLayer(polyline);
-                polyline = L.polyline(detailedRouteLatLngs, {color: '#1a4379', weight: 5}).addTo(mainMap);
+                /* ✨ 지도 위 경로선도 진녹색으로 변경! */
+                polyline = L.polyline(detailedRouteLatLngs, {color: '#2e7d32', weight: 5}).addTo(mainMap);
                 mainMap.fitBounds(polyline.getBounds(), {padding: [30, 30]});
                 setTimeout(playRouteAnimation, 500);
             } else { drawStraightLine(latlngs); }
@@ -552,7 +571,8 @@
     function drawStraightLine(latlngs) {
         detailedRouteLatLngs = latlngs; 
         if(polyline) mainMap.removeLayer(polyline);
-        polyline = L.polyline(latlngs, {color: '#1a4379', weight: 4, dashArray: '10, 10'}).addTo(mainMap);
+        /* ✨ 점선도 진녹색으로 변경! */
+        polyline = L.polyline(latlngs, {color: '#2e7d32', weight: 4, dashArray: '10, 10'}).addTo(mainMap);
         mainMap.fitBounds(polyline.getBounds(), {padding: [30, 30]});
         setTimeout(playRouteAnimation, 500);
     }
