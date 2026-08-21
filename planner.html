@@ -40,9 +40,10 @@
         .search-wrapper button { background: #4caf50; color: white; border: none; border-radius: 40px; padding: 12px 24px; font-size: 15px; font-weight: bold; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 6px rgba(76, 175, 80, 0.4); transition: 0.2s; }
         .search-wrapper button:hover { background: #388e3c; transform: scale(1.05); }
 
+        /* ✨ 아기자기한 달력 및 화살표 위치 교정 */
         .cute-calendar { position: fixed !important; top: 15% !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 100000 !important; border-radius: 24px !important; border: 4px solid #a5d6a7 !important; box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important; padding: 10px !important; font-family: 'Malgun Gothic', sans-serif !important; background: white !important; }
         .cute-calendar::before, .cute-calendar::after { display: none !important; }
-        .cute-calendar .flatpickr-months { background: #e8f5e9; border-radius: 16px; padding: 10px 0; margin-bottom: 10px; }
+        .cute-calendar .flatpickr-months { background: #e8f5e9; border-radius: 16px; padding: 10px 0; margin-bottom: 10px; position: relative; }
         .cute-calendar .flatpickr-month { color: #2e7d32; fill: #2e7d32; height: 35px; }
         .cute-calendar .flatpickr-current-month { font-size: 120%; font-weight: 900; }
         .cute-calendar .flatpickr-day { border-radius: 50% !important; font-weight: bold; color: #555; }
@@ -50,10 +51,15 @@
         .cute-calendar .flatpickr-day.inRange { background: #fff3e0 !important; border-color: #fff3e0 !important; box-shadow: -5px 0 0 #fff3e0, 5px 0 0 #fff3e0 !important; }
         .cute-calendar .flatpickr-day:hover { background: #e8f5e9 !important; }
 
+        /* ⬅️ 화살표 안쪽으로 당기고 정렬/색상 맞추기 */
+        .cute-calendar .flatpickr-prev-month, .cute-calendar .flatpickr-next-month { top: 12px !important; padding: 5px !important; border-radius: 50% !important; transition: 0.2s; }
+        .cute-calendar .flatpickr-prev-month { left: 15px !important; }
+        .cute-calendar .flatpickr-next-month { right: 15px !important; }
+        .cute-calendar .flatpickr-prev-month svg, .cute-calendar .flatpickr-next-month svg { fill: #2e7d32 !important; width: 14px; height: 14px; }
+        .cute-calendar .flatpickr-prev-month:hover, .cute-calendar .flatpickr-next-month:hover { background: #c8e6c9 !important; }
+
         /* 플래너 뷰 */
         #planner-view { display: none; }
-        
-        /* ✨ 상단 + 버튼 삭제로 인해 헤더 정렬 맞춤 */
         .header { display: flex; justify-content: center; align-items: center; padding: 15px 20px; background: white; border-bottom: 1px solid #ddd; position: relative; }
         .header-logo { display: flex; align-items: center; font-weight: bold; font-size: 18px; color: var(--primary); cursor: pointer; }
         .header-logo span.icon { background: var(--primary); color: white; padding: 2px 8px; border-radius: 8px; margin-right: 8px; font-size: 14px; }
@@ -118,7 +124,6 @@
         .pac-item { padding: 10px; font-size: 14px; cursor: pointer; }
         .pac-item:hover { background-color: #f4f6f9; }
 
-        /* ✨ 모바일 반응형 디자인 (글씨 크기 및 간격 자동 조절) */
         @media (max-width: 600px) {
             .hero-title { font-size: 20px; }
             .hero-date { font-size: 11.5px; }
@@ -152,7 +157,6 @@
 <div id="planner-view" class="app-container">
     <div class="header">
         <div class="header-logo" onclick="goToHome()"><span class="icon">종</span> 쫑 플래너</div>
-        <!-- ❌ 상단의 쓸데없는 + 버튼 삭제 완료! -->
     </div>
 
     <div class="hero-section" id="hero-bg">
@@ -190,11 +194,9 @@
         </div>
     </div>
 
-    <!-- 우측 하단 플로팅 버튼(FAB)만 유지 -->
     <button class="fab-add" onclick="openAddModal()"><span class="material-symbols-outlined">add</span></button>
 </div>
 
-<!-- 모달 팝업 -->
 <div id="add-modal" class="modal-overlay" onclick="closeModal(event, 'add-modal')">
     <div class="modal-content">
         <button class="modal-close" onclick="closeModal(event, 'add-modal', true)">&times;</button>
@@ -267,12 +269,12 @@
     }
 </script>
 
-<!-- 🚨 아래 YOUR_API_KEY_HERE 부분을 과장님의 실제 구글 API 키로 바꿔주세요! -->
+<!-- 🚨 아래 YOUR_API_KEY_HERE 부분을 과장님의 실제 구글 API 키로 덮어쓰기 해주세요! -->
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U&libraries=places&callback=initAutocomplete" async defer></script>
 
 <script>
-    // 🚨 아래 API_BASE_URL을 현재 작동 중인 ngrok 랜덤 주소로 바꿔주세요! (예: https://abcd.ngrok-free.app/api)
-    const API_BASE_URL = "3IDGn91WsWTXjtOShMLI4iiSeNm_4zRrHu317itznU2swfcm1"; 
+    // 💡 ngrok 접속 주소 반영 완료!
+    const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev/api"; 
     
     let CURRENT_TRIP = "";
     let currentSelectedDate = "";
