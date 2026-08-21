@@ -615,6 +615,7 @@
         movingMarker = L.marker(detailedRouteLatLngs[0], {icon: characterIcon}).addTo(mainMap);
         let currentIndex = 1;
         let speed = Math.max(25, Math.floor(1500 / detailedRouteLatLngs.length));
+        // 애니메이션 속도 조절기 값이 높을수록 느려짐
 
         function moveNext() {
             if(currentIndex >= detailedRouteLatLngs.length) {
