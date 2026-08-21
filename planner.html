@@ -40,7 +40,6 @@
         .search-wrapper button { background: #4caf50; color: white; border: none; border-radius: 40px; padding: 12px 24px; font-size: 15px; font-weight: bold; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 6px rgba(76, 175, 80, 0.4); transition: 0.2s; }
         .search-wrapper button:hover { background: #388e3c; transform: scale(1.05); }
 
-        /* ✨ 최근 저장된 여행 목록 CSS */
         .recent-trips-box { margin-top: 30px; width: 320px; text-align: left; }
         .recent-trips-title { font-size: 14px; color: #2e7d32; font-weight: bold; margin-bottom: 10px; padding-left: 10px; }
         .recent-trip-btn { width: 100%; background: white; border: 2px solid #a5d6a7; border-radius: 18px; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; color: var(--primary-dark); font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 8px; }
@@ -61,13 +60,11 @@
         .cute-calendar .flatpickr-prev-month svg, .cute-calendar .flatpickr-next-month svg { fill: #2e7d32 !important; width: 14px; height: 14px; }
         .cute-calendar .flatpickr-prev-month:hover, .cute-calendar .flatpickr-next-month:hover { background: #c8e6c9 !important; }
 
-        /* 플래너 뷰 */
         #planner-view { display: none; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: white; border-bottom: 1px solid #ddd; position: relative; }
         .header-logo { display: flex; align-items: center; font-weight: 900; font-size: 19px; color: var(--primary-dark); cursor: pointer; letter-spacing: -0.5px;}
         .header-logo span.icon { background: var(--primary); color: white; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px; font-size: 14px; box-shadow: 0 2px 4px rgba(76,175,80,0.3); }
         
-        /* ✨ 공유하기 버튼 추가 */
         .share-btn { display: flex; align-items: center; gap: 4px; background: var(--primary-light); color: var(--primary-dark); border: none; padding: 8px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; }
         .share-btn:hover { background: #c8e6c9; }
 
@@ -114,6 +111,7 @@
         .moving-character { z-index: 1000 !important; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3)); }
         
         .fab-add { position: fixed; bottom: 30px; right: calc(50% - 280px); background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 32px; box-shadow: 0 6px 16px rgba(76,175,80,0.4); border: none; z-index: 99; transition: 0.3s; cursor: pointer;}
+        .fab-add:hover { transform: scale(1.05); background: var(--primary-dark); }
         @media(max-width: 600px) { .fab-add { right: 20px; } }
 
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: none; justify-content: center; align-items: center; padding: 20px; }
@@ -127,6 +125,7 @@
         .input-group input:focus, .input-group select:focus { outline: none; border-color: var(--primary); background: white; }
         
         .btn-submit { width: 100%; background: var(--primary); color: white; padding: 15px; border: none; border-radius: 20px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(76,175,80,0.3); transition: 0.2s;}
+        .btn-submit:disabled { background: #a5d6a7; cursor: not-allowed; }
         
         .pac-container { z-index: 10005 !important; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); font-family: 'Malgun Gothic', sans-serif; border: none; overflow: hidden;}
         .pac-item { padding: 12px 10px; font-size: 14px; cursor: pointer; }
@@ -159,7 +158,6 @@
             <button onclick="openCalendar()">확인</button>
         </div>
         
-        <!-- ✨ 1. 최근 저장된 여행 목록 (자동 저장 기능) -->
         <div class="recent-trips-box" id="recent-trips-container" style="display:none;">
             <div class="recent-trips-title">🧳 계속 계획하기</div>
             <div id="recent-trips-list"></div>
@@ -170,7 +168,6 @@
 <div id="planner-view" class="app-container">
     <div class="header">
         <div class="header-logo" onclick="goToHome()"><span class="icon">종</span> 쫑 플래너</div>
-        <!-- ✨ 2. 여자친구 공유하기 버튼 -->
         <button class="share-btn" onclick="shareTrip()"><span class="material-symbols-outlined" style="font-size:16px;">ios_share</span> 공유</button>
     </div>
 
@@ -280,14 +277,14 @@
     }
 </script>
 
-<!-- 🚨 아래 YOUR_API_KEY_HERE 부분을 과장님의 실제 구글 API 키로 꼭 바꿔주세요! -->
+<!-- ✨ 과장님이 발급하신 구글 API 키 자동 적용 완료! -->
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U&libraries=places&callback=initAutocomplete" async defer></script>
 
 <script>
-    // 🚨 발급받으신 ngrok 주소로 바꿔주세요.
-    const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev"; 
+    // ✨ 과장님이 뚫어두신 ngrok 터널 주소 자동 적용 완료!
+    const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev/api"; 
     
-    // ✨ 모든 API 요청에 넣을 마법의 헤더 (ngrok 경고창 우회!)
+    // ✨ ngrok 경고창 우회를 위한 필수 마법의 헤더
     const FETCH_HEADERS = {
         'Content-Type': 'application/json',
         'ngrok-skip-browser-warning': 'true' 
@@ -299,11 +296,8 @@
     let editPlaceId = null; 
     let detailedRouteLatLngs = [];
 
-    // ✨ 앱을 처음 켤 때: 1. 자동저장 로드 / 2. 공유 링크 인식
     window.onload = () => {
         loadRecentTrips();
-        
-        // 누군가 공유 링크로 들어왔을 때 자동으로 바로 시작!
         const urlParams = new URLSearchParams(window.location.search);
         const t = urlParams.get('trip');
         const s = urlParams.get('start');
@@ -329,11 +323,10 @@
         }
     }
 
-    // ✨ URL 복사 및 공유 기능
     function shareTrip() {
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(() => {
-            alert("🔗 링크가 복사되었습니다!\n여자친구분께 카톡으로 보내면 바로 일정을 볼 수 있습니다 🥰");
+            alert("🔗 링크가 복사되었습니다!\n여자친구분께 카톡으로 보내면 바로 일정을 같이 볼 수 있습니다 🥰");
         });
     }
 
@@ -359,7 +352,6 @@
         document.getElementById('planner-view').style.display = 'none';
         document.getElementById('landing-view').style.opacity = '1';
         document.getElementById('landing-view').style.display = 'flex';
-        // 홈으로 가면 URL을 깔끔하게 원복
         window.history.pushState({}, '', window.location.pathname);
         loadRecentTrips();
     }
@@ -373,22 +365,18 @@
 
         CURRENT_TRIP = `${dest} 여행`;
         
-        // 날짜 문자열 만들기
         const startStr = startDate.toISOString().split('T')[0];
         const endStr = endDate.toISOString().split('T')[0];
         
-        // ✨ 로컬 스토리지에 내 여행 자동 저장!
         let saved = JSON.parse(localStorage.getItem('js_planner_trips') || '[]');
         if(!saved.find(t => t.dest === dest && t.start === startStr)) {
             saved.push({dest, start: startStr, end: endStr});
             localStorage.setItem('js_planner_trips', JSON.stringify(saved));
         }
 
-        // ✨ URL을 공유하기 쉽게 변경! (?trip=나트랑&start=2026...)
         const newUrl = `${window.location.pathname}?trip=${encodeURIComponent(dest)}&start=${startStr}&end=${endStr}`;
         window.history.pushState({path: newUrl}, '', newUrl);
 
-        // 헤더 세팅
         const diffTime = Math.abs(endDate - startDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
         const nights = diffDays; const days = diffDays + 1;
@@ -529,7 +517,6 @@
         });
     }
 
-    // ✨ 데이터 불러올 때 FETCH_HEADERS 적용!
     async function loadPlacesData() {
         try {
             const response = await fetch(`${API_BASE_URL}/places/${CURRENT_TRIP}`, { headers: FETCH_HEADERS });
@@ -641,36 +628,56 @@
         animTimer = setTimeout(moveNext, 500);
     }
 
-    // ✨ 데이터 저장할 때 FETCH_HEADERS 적용!
+    // ✨ 에러를 명확히 보여주는 완벽한 저장 기능
     async function submitPlace() {
+        // 검색창 텍스트가 있으면 무조건 가져오기
+        const pName = document.getElementById('place_name').value || document.getElementById('map-search-input').value || "직접 지정한 위치";
+        
         const data = {
-            trip_name: CURRENT_TRIP, visit_date: document.getElementById('visit_date').value,
-            visit_time: document.getElementById('visit_time').value, place_name: document.getElementById('place_name').value,
-            lat: parseFloat(document.getElementById('lat').value), lng: parseFloat(document.getElementById('lng').value),
+            trip_name: CURRENT_TRIP, 
+            visit_date: document.getElementById('visit_date').value,
+            visit_time: document.getElementById('visit_time').value, 
+            place_name: pName,
+            lat: parseFloat(document.getElementById('lat').value), 
+            lng: parseFloat(document.getElementById('lng').value),
             category: document.getElementById('category').value
         };
-        if(!data.visit_date || !data.visit_time || !data.place_name || isNaN(data.lat)) { 
-            alert("❗ 구글 검색창에서 장소를 찾은 뒤 '자동완성 리스트'를 터치해주세요!"); return; 
+        
+        if(!data.visit_date || !data.visit_time || isNaN(data.lat)) { 
+            alert("❗ 필수 입력 정보(날짜, 시간, 위치)가 빠져있습니다!"); return; 
         }
+
+        const btn = document.getElementById('btn-save');
+        btn.innerText = "저장 중...";
+        btn.disabled = true;
 
         try {
             const method = editPlaceId ? 'PUT' : 'POST';
             const url = editPlaceId ? `${API_BASE_URL}/places/${editPlaceId}` : `${API_BASE_URL}/places`;
+            
             const res = await fetch(url, { method: method, headers: FETCH_HEADERS, body: JSON.stringify(data) });
+            
             if(res.ok) {
                 document.getElementById('add-modal').style.display = 'none';
                 selectDate(data.visit_date); loadPlacesData(); 
+            } else {
+                alert("❗ 저장 실패! (PC의 파이썬 서버가 정상 작동하는지 확인해주세요!)");
             }
-        } catch(e) { alert("저장 실패! 서버 연결을 확인해주세요."); }
+        } catch(e) { 
+            alert("❗ 네트워크 오류! (ngrok 주소가 맞는지, PC 터널이 켜져 있는지 확인해주세요!)"); 
+        } finally {
+            btn.innerText = editPlaceId ? "수정 완료" : "저장하기";
+            btn.disabled = false;
+        }
     }
 
-    // ✨ 데이터 삭제할 때 FETCH_HEADERS 적용!
     async function deletePlace(id) {
         if(confirm("정말 삭제할까요?")) {
             try {
-                await fetch(`${API_BASE_URL}/places/${id}`, { method: 'DELETE', headers: FETCH_HEADERS });
-                loadPlacesData(); 
-            } catch(e) { alert("삭제 실패!"); }
+                const res = await fetch(`${API_BASE_URL}/places/${id}`, { method: 'DELETE', headers: FETCH_HEADERS });
+                if(res.ok) { loadPlacesData(); }
+                else { alert("삭제 실패! 서버 에러"); }
+            } catch(e) { alert("삭제 실패! 네트워크 오류"); }
         }
     }
 </script>
