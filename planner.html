@@ -110,6 +110,21 @@
         #map-container { height: 500px; width: 100%; border-radius: 24px; border: 3px solid #e8f5e9; overflow: hidden; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
         .moving-character { z-index: 1000 !important; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3)); }
         
+        /* ✨ 커스텀 맵 마커(숫자) 스타일 */
+        .custom-div-icon { background: transparent; border: none; }
+        .number-marker { width: 32px; height: 32px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 15px; border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.3); text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .number-marker.명소 { background-color: #f44336; }
+        .number-marker.식당 { background-color: #ff9800; }
+        .number-marker.카페 { background-color: #795548; }
+        .number-marker.숙소 { background-color: #1976d2; }
+        .number-marker.공항 { background-color: #9c27b0; }
+
+        /* ✨ 지도 위 말풍선(타임라인) 라벨 스타일 */
+        .custom-map-label { background-color: white !important; border: 2px solid var(--primary) !important; border-radius: 20px !important; padding: 5px 12px !important; font-family: 'Malgun Gothic', sans-serif !important; color: #333 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important; white-space: nowrap; font-size: 13px !important; opacity: 0.95 !important; }
+        .leaflet-tooltip-top.custom-map-label::before { border-top-color: var(--primary) !important; }
+        .t-time { color: #d32f2f; margin-right: 5px; font-weight: 900; }
+        .t-name { font-weight: bold; overflow: hidden; text-overflow: ellipsis; max-width: 140px; display: inline-block; vertical-align: bottom; }
+
         .fab-add { position: fixed; bottom: 30px; right: calc(50% - 280px); background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 32px; box-shadow: 0 6px 16px rgba(76,175,80,0.4); border: none; z-index: 99; transition: 0.3s; cursor: pointer;}
         .fab-add:hover { transform: scale(1.05); background: var(--primary-dark); }
         @media(max-width: 600px) { .fab-add { right: 20px; } }
@@ -167,10 +182,8 @@
 
 <div id="planner-view" class="app-container">
     <div class="header">
-        <!-- ✨ 1. 로고 텍스트 커스텀 반영 -->
         <div class="header-logo" onclick="goToHome()"><span class="icon">쫑</span> 플래너</div>
         
-        <!-- ✨ 2. 홈으로 버튼 & 공유 버튼 나란히 배치 -->
         <div style="display: flex; gap: 8px;">
             <button class="share-btn" onclick="goToHome()" style="background: #ffffff; border: 2px solid var(--primary-light);">
                 <span class="material-symbols-outlined" style="font-size:16px;">home</span> 홈으로
@@ -188,7 +201,6 @@
             <input type="file" accept="image/*" style="display:none;" onchange="changeHeroImage(event)">
         </label>
         <div class="hero-content">
-            <!-- ✨ 3. 서브타이틀 커스텀 반영 -->
             <div class="hero-subtitle" style="color:#dcedc8;">민지랑 종석이랑💕 · 2026</div>
             <h1 class="hero-title" id="hero-title-text">삿포로 여행</h1>
             <div class="hero-date" id="hero-date-text" style="color:#f1f8e9;">11월 18일 (수) - 11월 21일 (토) · 3박 4일</div>
@@ -288,11 +300,9 @@
     }
 </script>
 
-<!-- 과장님의 구글 API 키 적용 완료! -->
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U&libraries=places&callback=initAutocomplete" async defer></script>
 
 <script>
-    // 터널 주소 적용 완료!
     const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev/api"; 
     
     const FETCH_HEADERS = {
@@ -535,8 +545,10 @@
         } catch (error) { console.error("로딩 실패", error); }
     }
 
+    // ✨ 장소를 시간순으로 완벽하게 정렬하여 1번, 2번 순서대로 보여줍니다.
     function renderPlacesForCurrentDate() {
-        const filtered = allPlaces.filter(p => p.visit_date === currentSelectedDate);
+        let filtered = allPlaces.filter(p => p.visit_date === currentSelectedDate);
+        filtered.sort((a, b) => a.visit_time.localeCompare(b.visit_time));
         renderScheduleList(filtered);
         if(mapInitialized) renderMapMarkers(filtered);
     }
@@ -575,10 +587,27 @@
         currentMarkers.forEach(m => mainMap.removeLayer(m));
         currentMarkers = []; routeLatLngs = []; 
 
-        places.forEach(p => {
-            const marker = L.marker([p.lat, p.lng]).addTo(mainMap);
-            marker.bindPopup(`<b>${p.place_name}</b><br>⏰ ${p.visit_time}`);
-            currentMarkers.push(marker); routeLatLngs.push([p.lat, p.lng]);
+        places.forEach((p, index) => {
+            // ✨ 1. 커스텀 동그라미 번호 뱃지 생성 (카테고리별 색상 반영)
+            let catClass = p.category || '명소';
+            const numIcon = L.divIcon({
+                html: `<div class="number-marker ${catClass}">${index + 1}</div>`,
+                className: 'custom-div-icon',
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+
+            // 지도에 마커 추가
+            const marker = L.marker([p.lat, p.lng], {icon: numIcon}).addTo(mainMap);
+            
+            // ✨ 2. 마커 위에 항상 떠 있는 타임라인 말풍선 라벨 추가!
+            marker.bindTooltip(
+                `<span class="t-time">${p.visit_time}</span> <span class="t-name">${p.place_name}</span>`, 
+                { permanent: true, direction: 'top', offset: [0, -15], className: 'custom-map-label' }
+            );
+
+            currentMarkers.push(marker); 
+            routeLatLngs.push([p.lat, p.lng]);
         });
 
         if(routeLatLngs.length > 1) {
@@ -624,8 +653,6 @@
 
         movingMarker = L.marker(detailedRouteLatLngs[0], {icon: characterIcon}).addTo(mainMap);
         let currentIndex = 1;
-        
-        // ✨ 4. 과장님이 수정하신 스피드 1000 코드로 반영 완료!
         let speed = Math.max(25, Math.floor(1000 / detailedRouteLatLngs.length));
 
         function moveNext() {
