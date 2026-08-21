@@ -12,8 +12,17 @@
     <style>
         :root { --primary: #1a4379; --primary-light: #e8eff6; --bg-color: #f4f6f9; --text-main: #333; --text-sub: #6c757d; }
         * { box-sizing: border-box; }
-        body { margin: 0; padding: 0; font-family: 'Malgun Gothic', sans-serif; display: flex; justify-content: center; background-color: #e9ecef; }
-        .app-container { width: 100%; max-width: 600px; background-color: var(--bg-color); min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.1); overflow-x: hidden; }
+        
+        /* ✨ 귀여운 연초록 땡땡이 배경 패턴 적용! */
+        body { 
+            margin: 0; padding: 0; font-family: 'Malgun Gothic', sans-serif; display: flex; justify-content: center; 
+            background-color: #f1f8e9; /* 아주 연한 바탕 초록 */
+            background-image: radial-gradient(#dcedc8 15%, transparent 16%), radial-gradient(#dcedc8 15%, transparent 16%);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+        }
+        
+        .app-container { width: 100%; max-width: 600px; background-color: var(--bg-color); min-height: 100vh; position: relative; box-shadow: 0 0 30px rgba(0,0,0,0.15); overflow-x: hidden; }
 
         /* 랜딩 페이지 */
         #landing-view { position: absolute; top: 0; left: 0; width: 100%; height: 100vh; background: linear-gradient(135deg, #dcedc8 0%, #c8e6c9 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; overflow: hidden; transition: opacity 0.5s ease; }
@@ -40,7 +49,6 @@
         .search-wrapper button { background: #4caf50; color: white; border: none; border-radius: 40px; padding: 12px 24px; font-size: 15px; font-weight: bold; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 6px rgba(76, 175, 80, 0.4); transition: 0.2s; }
         .search-wrapper button:hover { background: #388e3c; transform: scale(1.05); }
 
-        /* ✨ 토요일 짤림 방지를 위해 width: auto 추가! */
         .cute-calendar { position: fixed !important; top: 15% !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 100000 !important; border-radius: 24px !important; border: 4px solid #a5d6a7 !important; box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important; padding: 15px 15px 10px 15px !important; font-family: 'Malgun Gothic', sans-serif !important; background: white !important; width: auto !important; min-width: 330px !important; box-sizing: border-box !important; }
         .cute-calendar::before, .cute-calendar::after { display: none !important; }
         .cute-calendar .flatpickr-months { background: #e8f5e9; border-radius: 16px; padding: 10px 0; margin-bottom: 10px; position: relative; }
@@ -79,10 +87,12 @@
 
         .date-strip { display: flex; overflow-x: auto; background: white; padding: 15px 20px; gap: 10px; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .date-strip::-webkit-scrollbar { display: none; }
-        .date-card { border: 1px solid #e0e0e0; border-radius: 10px; padding: 10px 15px; text-align: center; min-width: 60px; transition: 0.2s; cursor: pointer;}
+        
+        /* ✨ 날짜 카드 글자 짤림 완벽 해결 (너비 확대, 간격 조정) */
+        .date-card { border: 1px solid #e0e0e0; border-radius: 12px; padding: 10px 8px; text-align: center; min-width: 68px; transition: 0.2s; cursor: pointer; box-sizing: border-box; }
         .date-card.active { background: var(--primary); color: white; border-color: var(--primary); }
         .date-card .day { font-size: 12px; margin-bottom: 3px; }
-        .date-card .date { font-size: 18px; font-weight: bold; }
+        .date-card .date { font-size: 16px; font-weight: bold; letter-spacing: -0.5px; }
         .date-card .loc { font-size: 11px; margin-top: 3px; opacity: 0.8; }
 
         .content-area { padding: 20px; }
@@ -123,11 +133,12 @@
         .pac-item { padding: 10px; font-size: 14px; cursor: pointer; }
         .pac-item:hover { background-color: #f4f6f9; }
 
+        /* ✨ 모바일 반응형 디자인 교정 (카드 너비 포함) */
         @media (max-width: 600px) {
             .hero-title { font-size: 20px; }
             .hero-date { font-size: 11.5px; }
-            .date-card { padding: 8px 10px; min-width: 50px; }
-            .date-card .date { font-size: 15px; }
+            .date-card { padding: 8px 5px; min-width: 58px; }
+            .date-card .date { font-size: 14px; }
             .date-card .day { font-size: 11px; }
             .date-card .loc { font-size: 10px; }
             .tab-btn { font-size: 14px; padding: 10px; }
@@ -268,10 +279,11 @@
     }
 </script>
 
-<!-- 🚨 아래 YOUR_API_KEY_HERE 부분을 과장님의 실제 구글 API 키로 덮어쓰기 해주세요! -->
+<!-- 🚨 잊지 말고 여기에 발급받으신 구글 API 키를 다시 넣어주세요! -->
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U&libraries=places&callback=initAutocomplete" async defer></script>
 
 <script>
+    // 💡 ngrok 접속 주소 반영 완료!
     const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev/api"; 
     
     let CURRENT_TRIP = "";
