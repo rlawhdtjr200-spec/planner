@@ -153,7 +153,7 @@
         <h1 class="landing-title">쫑 플래너</h1>
         <h2 class="landing-subtitle">어디로 여행하고 싶어?</h2>
         <div class="search-wrapper">
-            <input type="text" id="dest-input" placeholder="여행지 (예: 나트랑)">
+            <input type="text" id="dest-input" placeholder="여행지 (예: 삿포로)">
             <input type="text" id="hidden-cal" style="display:none;">
             <button onclick="openCalendar()">확인</button>
         </div>
@@ -167,8 +167,18 @@
 
 <div id="planner-view" class="app-container">
     <div class="header">
+        <!-- ✨ 1. 로고 텍스트 커스텀 반영 -->
         <div class="header-logo" onclick="goToHome()"><span class="icon">쫑</span> 플래너</div>
-        <button class="share-btn" onclick="shareTrip()"><span class="material-symbols-outlined" style="font-size:16px;">ios_share</span> 공유</button>
+        
+        <!-- ✨ 2. 홈으로 버튼 & 공유 버튼 나란히 배치 -->
+        <div style="display: flex; gap: 8px;">
+            <button class="share-btn" onclick="goToHome()" style="background: #ffffff; border: 2px solid var(--primary-light);">
+                <span class="material-symbols-outlined" style="font-size:16px;">home</span> 홈으로
+            </button>
+            <button class="share-btn" onclick="shareTrip()">
+                <span class="material-symbols-outlined" style="font-size:16px;">ios_share</span> 공유
+            </button>
+        </div>
     </div>
 
     <div class="hero-section" id="hero-bg">
@@ -178,9 +188,10 @@
             <input type="file" accept="image/*" style="display:none;" onchange="changeHeroImage(event)">
         </label>
         <div class="hero-content">
+            <!-- ✨ 3. 서브타이틀 커스텀 반영 -->
             <div class="hero-subtitle" style="color:#dcedc8;">민지랑 종석이랑💕 · 2026</div>
-            <h1 class="hero-title" id="hero-title-text">나트랑 여행</h1>
-            <div class="hero-date" id="hero-date-text" style="color:#f1f8e9;">11월 18일 (수) - 11월 22일 (일) · 4박 5일</div>
+            <h1 class="hero-title" id="hero-title-text">삿포로 여행</h1>
+            <div class="hero-date" id="hero-date-text" style="color:#f1f8e9;">11월 18일 (수) - 11월 21일 (토) · 3박 4일</div>
         </div>
     </div>
 
@@ -277,14 +288,13 @@
     }
 </script>
 
-<!-- ✨ 과장님이 발급하신 구글 API 키 자동 적용 완료! -->
+<!-- 과장님의 구글 API 키 적용 완료! -->
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U&libraries=places&callback=initAutocomplete" async defer></script>
 
 <script>
-    // ✨ 과장님이 뚫어두신 ngrok 터널 주소 자동 적용 완료!
+    // 터널 주소 적용 완료!
     const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev/api"; 
     
-    // ✨ ngrok 경고창 우회를 위한 필수 마법의 헤더
     const FETCH_HEADERS = {
         'Content-Type': 'application/json',
         'ngrok-skip-browser-warning': 'true' 
@@ -614,8 +624,9 @@
 
         movingMarker = L.marker(detailedRouteLatLngs[0], {icon: characterIcon}).addTo(mainMap);
         let currentIndex = 1;
-        let speed = Math.max(25, Math.floor(1500 / detailedRouteLatLngs.length));
-        // 애니메이션 속도 조절기 값이 높을수록 느려짐
+        
+        // ✨ 4. 과장님이 수정하신 스피드 1000 코드로 반영 완료!
+        let speed = Math.max(25, Math.floor(1000 / detailedRouteLatLngs.length));
 
         function moveNext() {
             if(currentIndex >= detailedRouteLatLngs.length) {
@@ -629,9 +640,7 @@
         animTimer = setTimeout(moveNext, 500);
     }
 
-    // ✨ 에러를 명확히 보여주는 완벽한 저장 기능
     async function submitPlace() {
-        // 검색창 텍스트가 있으면 무조건 가져오기
         const pName = document.getElementById('place_name').value || document.getElementById('map-search-input').value || "직접 지정한 위치";
         
         const data = {
