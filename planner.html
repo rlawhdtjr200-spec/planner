@@ -40,8 +40,8 @@
         .search-wrapper button { background: #4caf50; color: white; border: none; border-radius: 40px; padding: 12px 24px; font-size: 15px; font-weight: bold; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 6px rgba(76, 175, 80, 0.4); transition: 0.2s; }
         .search-wrapper button:hover { background: #388e3c; transform: scale(1.05); }
 
-        /* ✨ 아기자기한 달력 및 화살표 위치 교정 */
-        .cute-calendar { position: fixed !important; top: 15% !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 100000 !important; border-radius: 24px !important; border: 4px solid #a5d6a7 !important; box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important; padding: 10px !important; font-family: 'Malgun Gothic', sans-serif !important; background: white !important; }
+        /* ✨ 토요일 짤림 방지를 위해 width: auto 추가! */
+        .cute-calendar { position: fixed !important; top: 15% !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 100000 !important; border-radius: 24px !important; border: 4px solid #a5d6a7 !important; box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important; padding: 15px 15px 10px 15px !important; font-family: 'Malgun Gothic', sans-serif !important; background: white !important; width: auto !important; min-width: 330px !important; box-sizing: border-box !important; }
         .cute-calendar::before, .cute-calendar::after { display: none !important; }
         .cute-calendar .flatpickr-months { background: #e8f5e9; border-radius: 16px; padding: 10px 0; margin-bottom: 10px; position: relative; }
         .cute-calendar .flatpickr-month { color: #2e7d32; fill: #2e7d32; height: 35px; }
@@ -51,7 +51,6 @@
         .cute-calendar .flatpickr-day.inRange { background: #fff3e0 !important; border-color: #fff3e0 !important; box-shadow: -5px 0 0 #fff3e0, 5px 0 0 #fff3e0 !important; }
         .cute-calendar .flatpickr-day:hover { background: #e8f5e9 !important; }
 
-        /* ⬅️ 화살표 안쪽으로 당기고 정렬/색상 맞추기 */
         .cute-calendar .flatpickr-prev-month, .cute-calendar .flatpickr-next-month { top: 12px !important; padding: 5px !important; border-radius: 50% !important; transition: 0.2s; }
         .cute-calendar .flatpickr-prev-month { left: 15px !important; }
         .cute-calendar .flatpickr-next-month { right: 15px !important; }
@@ -273,7 +272,6 @@
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U&libraries=places&callback=initAutocomplete" async defer></script>
 
 <script>
-    // 💡 ngrok 접속 주소 반영 완료!
     const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev/api"; 
     
     let CURRENT_TRIP = "";
