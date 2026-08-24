@@ -93,11 +93,10 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        .schedule-item { display: flex; margin-bottom: 25px; position: relative; }
-        .schedule-item::before { content: ''; position: absolute; left: 18px; top: 35px; bottom: -35px; width: 4px; border-radius: 2px; background: #c8e6c9; z-index: 1; }
-        .schedule-item:last-child::before { display: none; }
+        /* ✨ 교통편이 들어갈 수 있도록 기존 스케줄 라인 CSS 삭제 및 재조정 */
+        .schedule-item { display: flex; position: relative; }
         
-        .schedule-icon { width: 40px; height: 40px; border-radius: 50%; background: #ffebee; color: #d32f2f; display: flex; align-items: center; justify-content: center; font-size: 20px; z-index: 2; position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
+        .schedule-icon { width: 40px; height: 40px; border-radius: 50%; background: #ffebee; color: #d32f2f; display: flex; align-items: center; justify-content: center; font-size: 20px; z-index: 2; position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.08); flex-shrink: 0; }
         .schedule-icon.숙소 { background: #e3f2fd; color: #1976d2; }
         .schedule-icon.식당 { background: #fff3e0; color: #f57c00; }
         .schedule-icon.공항 { background: #e8eaf6; color: #3f51b5; }
@@ -110,7 +109,6 @@
         #map-container { height: 500px; width: 100%; border-radius: 24px; border: 3px solid #e8f5e9; overflow: hidden; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
         .moving-character { z-index: 1000 !important; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3)); }
         
-        /* ✨ 커스텀 맵 마커(숫자) 스타일 */
         .custom-div-icon { background: transparent; border: none; }
         .number-marker { width: 32px; height: 32px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 15px; border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.3); text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
         .number-marker.명소 { background-color: #f44336; }
@@ -119,7 +117,6 @@
         .number-marker.숙소 { background-color: #1976d2; }
         .number-marker.공항 { background-color: #9c27b0; }
 
-        /* ✨ 지도 위 말풍선(타임라인) 라벨 스타일 */
         .custom-map-label { background-color: white !important; border: 2px solid var(--primary) !important; border-radius: 20px !important; padding: 5px 12px !important; font-family: 'Malgun Gothic', sans-serif !important; color: #333 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important; white-space: nowrap; font-size: 13px !important; opacity: 0.95 !important; }
         .leaflet-tooltip-top.custom-map-label::before { border-top-color: var(--primary) !important; }
         .t-time { color: #d32f2f; margin-right: 5px; font-weight: 900; }
@@ -232,11 +229,11 @@
     <button class="fab-add" onclick="openAddModal()"><span class="material-symbols-outlined">add</span></button>
 </div>
 
+<!-- ✨ 장소 추가 모달 -->
 <div id="add-modal" class="modal-overlay" onclick="closeModal(event, 'add-modal')">
     <div class="modal-content">
         <button class="modal-close" onclick="closeModal(event, 'add-modal', true)">&times;</button>
         <h2 class="modal-title" id="modal-title-text"><span class="material-symbols-outlined">edit_location_alt</span> 일정 추가</h2>
-        
         <div class="input-group">
             <label>방문 날짜</label>
             <input type="date" id="visit_date" required>
@@ -259,15 +256,31 @@
             <label>장소 검색 (구글 맵)</label>
             <input type="text" id="map-search-input" placeholder="여기에 검색어를 입력하세요" style="border: 2px solid var(--primary); background: white;">
         </div>
-        
         <input type="hidden" id="place_name">
         <div id="mini-map" style="height: 150px; width: 100%; border-radius: 16px; border: 2px solid #e0e0e0; margin-bottom: 10px; cursor: crosshair;"></div>
-        
         <div style="display:flex; gap:10px;">
             <div class="input-group" style="flex:1;"><input type="number" id="lat" placeholder="위도" readonly style="background:#f0f0f0;"></div>
             <div class="input-group" style="flex:1;"><input type="number" id="lng" placeholder="경도" readonly style="background:#f0f0f0;"></div>
         </div>
         <button class="btn-submit" id="btn-save" onclick="submitPlace()">저장하기</button>
+    </div>
+</div>
+
+<!-- ✨ 교통편 추가 팝업창 -->
+<div id="transit-modal" class="modal-overlay" onclick="closeModal(event, 'transit-modal')">
+    <div class="modal-content" style="text-align: center; max-width: 320px;">
+        <button class="modal-close" onclick="closeModal(event, 'transit-modal', true)">&times;</button>
+        <h3 style="color: var(--primary-dark); margin-top: 0; margin-bottom: 20px;">어떻게 이동하시나요?</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <button onclick="setTransitMode('walk')" style="padding: 20px; font-size: 18px; border-radius: 20px; border: 2px solid #e0e0e0; background: white; cursor: pointer; font-weight: bold; transition: 0.2s;">🚶 도보</button>
+            <button onclick="setTransitMode('bus')" style="padding: 20px; font-size: 18px; border-radius: 20px; border: 2px solid #e0e0e0; background: white; cursor: pointer; font-weight: bold; transition: 0.2s;">🚌 버스</button>
+            <button onclick="setTransitMode('subway')" style="padding: 20px; font-size: 18px; border-radius: 20px; border: 2px solid #e0e0e0; background: white; cursor: pointer; font-weight: bold; transition: 0.2s;">🚇 지하철</button>
+            <button onclick="setTransitMode('taxi')" style="padding: 20px; font-size: 18px; border-radius: 20px; border: 2px solid #e0e0e0; background: white; cursor: pointer; font-weight: bold; transition: 0.2s;">🚕 택시</button>
+        </div>
+        
+        <input type="hidden" id="transit-p1">
+        <input type="hidden" id="transit-p2">
     </div>
 </div>
 
@@ -283,14 +296,11 @@
         autocomplete.addListener('place_changed', function() {
             const place = autocomplete.getPlace();
             if (!place.geometry) { alert("정확한 장소를 자동완성 리스트에서 선택해주세요."); return; }
-            
             const lat = place.geometry.location.lat();
             const lng = place.geometry.location.lng();
-            
             document.getElementById('lat').value = lat.toFixed(6);
             document.getElementById('lng').value = lng.toFixed(6);
             document.getElementById('place_name').value = place.name;
-            
             if(miniMap) {
                 miniMap.setView([lat, lng], 15);
                 if(tempMarker) miniMap.removeLayer(tempMarker);
@@ -304,17 +314,13 @@
 
 <script>
     const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev/api"; 
-    
-    const FETCH_HEADERS = {
-        'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true' 
-    };
+    const FETCH_HEADERS = { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' };
 
     let CURRENT_TRIP = "";
     let currentSelectedDate = "";
     let allPlaces = []; 
     let editPlaceId = null; 
-    let detailedRouteLatLngs = [];
+    let detailedRouteSegments = []; // ✨ 교통편 구간별 관리를 위한 변수 교체
 
     window.onload = () => {
         loadRecentTrips();
@@ -322,10 +328,27 @@
         const t = urlParams.get('trip');
         const s = urlParams.get('start');
         const e = urlParams.get('end');
-        if(t && s && e) {
-            startPlanner(t, new Date(s), new Date(e));
-        }
+        if(t && s && e) { startPlanner(t, new Date(s), new Date(e)); }
     };
+
+    // ✨ 브라우저에 저장된 교통편 불러오기/저장하기 함수
+    function getTransitMode(p1, p2) {
+        return localStorage.getItem(`js_planner_transit_${CURRENT_TRIP}_${p1}_${p2}`);
+    }
+    
+    function openTransitModal(p1, p2) {
+        document.getElementById('transit-p1').value = p1;
+        document.getElementById('transit-p2').value = p2;
+        document.getElementById('transit-modal').style.display = 'flex';
+    }
+
+    function setTransitMode(mode) {
+        let p1 = document.getElementById('transit-p1').value;
+        let p2 = document.getElementById('transit-p2').value;
+        localStorage.setItem(`js_planner_transit_${CURRENT_TRIP}_${p1}_${p2}`, mode);
+        document.getElementById('transit-modal').style.display = 'none';
+        renderPlacesForCurrentDate(); // 선택 후 화면 즉시 갱신!
+    }
 
     function loadRecentTrips() {
         const saved = JSON.parse(localStorage.getItem('js_planner_trips') || '[]');
@@ -346,7 +369,7 @@
     function shareTrip() {
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(() => {
-            alert("🔗 링크가 복사되었습니다!\n여자친구분께 카톡으로 보내면 바로 일정을 같이 볼 수 있습니다 🥰");
+            alert("🔗 링크가 복사되었습니다!\n카톡으로 보내면 바로 일정을 같이 볼 수 있습니다 🥰");
         });
     }
 
@@ -384,7 +407,6 @@
         }, 500);
 
         CURRENT_TRIP = `${dest} 여행`;
-        
         const startStr = startDate.toISOString().split('T')[0];
         const endStr = endDate.toISOString().split('T')[0];
         
@@ -473,7 +495,6 @@
         document.getElementById('place_name').value = '';
         document.getElementById('lat').value = ''; document.getElementById('lng').value = '';
         if(tempMarker && miniMap) miniMap.removeLayer(tempMarker);
-        
         document.getElementById('add-modal').style.display = 'flex';
         setTimeout(() => { if(!miniMap) initMiniMap(); miniMap.invalidateSize(); }, 100);
     }
@@ -506,15 +527,9 @@
 
     let mainMap, miniMap, polyline;
     let mapInitialized = false;
-    let routeLatLngs = []; 
     let movingMarker = null; 
     let animTimer = null; 
     let tempMarker;
-
-    const characterIcon = L.divIcon({
-        html: '<div style="background:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:2px solid #4caf50; font-size:18px;">🚶</div>',
-        className: 'moving-character', iconSize: [30, 30], iconAnchor: [15, 15]
-    });
 
     async function initMainMap() {
         mainMap = L.map('map-container').setView([33.590, 130.420], 13);
@@ -545,7 +560,6 @@
         } catch (error) { console.error("로딩 실패", error); }
     }
 
-    // ✨ 장소를 시간순으로 완벽하게 정렬하여 1번, 2번 순서대로 보여줍니다.
     function renderPlacesForCurrentDate() {
         let filtered = allPlaces.filter(p => p.visit_date === currentSelectedDate);
         filtered.sort((a, b) => a.visit_time.localeCompare(b.visit_time));
@@ -553,167 +567,230 @@
         if(mapInitialized) renderMapMarkers(filtered);
     }
 
+    // ✨ 일정 목록 + 교통편 추가 노란색 버튼 완벽 구현
     function renderScheduleList(places) {
         const listDiv = document.getElementById('schedule-list');
-        listDiv.innerHTML = '';
+        let html = '';
+        
         if(places.length === 0) {
             listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:#999; font-weight:bold;">이 날짜에는 일정이 없어요.<br>우측 하단의 + 버튼을 눌러보세요!</div>`; return;
         }
+        
         const icons = { '명소': 'photo_camera', '식당': 'restaurant', '카페': 'local_cafe', '숙소': 'hotel', '공항': 'flight' };
-        places.forEach(p => {
+        
+        places.forEach((p, index) => {
             const iconName = icons[p.category] || 'location_on';
-            listDiv.insertAdjacentHTML('beforeend', `
-                <div class="schedule-item">
-                    <div class="schedule-icon ${p.category}"><span class="material-symbols-outlined">${iconName}</span></div>
-                    <div class="schedule-card">
-                        <div style="display:flex; justify-content:space-between;">
-                            <div class="s-time">${p.visit_time}</div>
-                            <div>
-                                <button style="background:none; border:none; cursor:pointer; color:#888;" onclick="openEditModal(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
-                                <button style="background:none; border:none; cursor:pointer; color:#d32f2f;" onclick="deletePlace(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
-                            </div>
-                        </div>
-                        <div class="s-title">${p.place_name}</div>
-                        <div class="s-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}')" style="width:fit-content; cursor:pointer;">
-                            <span class="material-symbols-outlined" style="font-size:16px;">directions</span> 길찾기
+            let isLast = (index === places.length - 1);
+
+            html += `
+            <div class="schedule-item" style="margin-bottom: ${isLast ? '25px' : '0'};">
+                ${!isLast ? `<div style="position: absolute; left: 18px; top: 35px; bottom: -15px; width: 4px; background: #c8e6c9; z-index: 1; border-radius: 2px;"></div>` : ''}
+                <div class="schedule-icon ${p.category}"><span class="material-symbols-outlined">${iconName}</span></div>
+                <div class="schedule-card" style="margin-bottom: ${isLast ? '0' : '15px'};">
+                    <div style="display:flex; justify-content:space-between;">
+                        <div class="s-time">${p.visit_time}</div>
+                        <div>
+                            <button style="background:none; border:none; cursor:pointer; color:#888;" onclick="openEditModal(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
+                            <button style="background:none; border:none; cursor:pointer; color:#d32f2f;" onclick="deletePlace(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
                         </div>
                     </div>
-                </div>`);
+                    <div class="s-title">${p.place_name}</div>
+                    <div class="s-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}')" style="width:fit-content; cursor:pointer;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">directions</span> 길찾기
+                    </div>
+                </div>
+            </div>`;
+
+            // 다음 일정이 있으면 가운데에 교통편 노란 버튼 추가!
+            if (!isLast) {
+                let nextP = places[index+1];
+                let mode = getTransitMode(p.id, nextP.id);
+                let btnText = '교통편 추가하기';
+                let btnStyle = 'background: #ffea00; border: 2px solid #ffea00; color: #333;'; // 예쁜 노란색
+
+                if(mode === 'bus') { btnText = '🚌 버스'; btnStyle = 'background: white; border: 2px solid #e0e0e0; color: #333;'; }
+                if(mode === 'subway') { btnText = '🚇 지하철'; btnStyle = 'background: white; border: 2px solid #e0e0e0; color: #333;'; }
+                if(mode === 'taxi') { btnText = '🚕 택시'; btnStyle = 'background: white; border: 2px solid #e0e0e0; color: #333;'; }
+                if(mode === 'walk') { btnText = '🚶 도보'; btnStyle = 'background: white; border: 2px solid #e0e0e0; color: #333;'; }
+
+                html += `
+                <div style="position: relative; height: 40px; margin-bottom: 15px; display: flex; align-items: center;">
+                    <div style="position: absolute; left: 18px; top: -15px; bottom: -15px; width: 4px; background: #c8e6c9; z-index: 1;"></div>
+                    <button onclick="openTransitModal(${p.id}, ${nextP.id})" style="position: relative; z-index: 2; margin-left: 55px; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15); transition: 0.2s; ${btnStyle}">
+                        ${btnText}
+                    </button>
+                </div>`;
+            }
         });
+        listDiv.innerHTML = html;
     }
 
     let currentMarkers = []; 
     function renderMapMarkers(places) {
         currentMarkers.forEach(m => mainMap.removeLayer(m));
-        currentMarkers = []; routeLatLngs = []; 
+        currentMarkers = []; 
 
         places.forEach((p, index) => {
-            // ✨ 1. 커스텀 동그라미 번호 뱃지 생성 (카테고리별 색상 반영)
             let catClass = p.category || '명소';
             const numIcon = L.divIcon({
                 html: `<div class="number-marker ${catClass}">${index + 1}</div>`,
                 className: 'custom-div-icon',
-                iconSize: [32, 32],
-                iconAnchor: [16, 16]
+                iconSize: [32, 32], iconAnchor: [16, 16]
             });
 
-            // 지도에 마커 추가
             const marker = L.marker([p.lat, p.lng], {icon: numIcon}).addTo(mainMap);
             
-            // ✨ 2. 마커 위에 항상 떠 있는 타임라인 말풍선 라벨 추가!
             marker.bindTooltip(
                 `<span class="t-time">${p.visit_time}</span> <span class="t-name">${p.place_name}</span>`, 
                 { permanent: true, direction: 'top', offset: [0, -15], className: 'custom-map-label' }
             );
 
             currentMarkers.push(marker); 
-            routeLatLngs.push([p.lat, p.lng]);
         });
 
-        if(routeLatLngs.length > 1) {
-            fetchAndDrawRoute(routeLatLngs);
-        } else if(routeLatLngs.length === 1) {
+        if(places.length > 1) {
+            fetchAndDrawRoute(places);
+        } else if(places.length === 1) {
             if(polyline) mainMap.removeLayer(polyline);
             if(movingMarker) mainMap.removeLayer(movingMarker);
-            mainMap.setView(routeLatLngs[0], 14);
+            mainMap.setView([places[0].lat, places[0].lng], 14);
         } else {
             if(polyline) mainMap.removeLayer(polyline);
             if(movingMarker) mainMap.removeLayer(movingMarker);
         }
     }
 
-    async function fetchAndDrawRoute(latlngs) {
-        const coordsStr = latlngs.map(p => `${p[1]},${p[0]}`).join(';');
-        const url = `https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`;
-        try {
-            const res = await fetch(url);
-            const data = await res.json();
-            if(data.code === 'Ok' && data.routes.length > 0) {
-                detailedRouteLatLngs = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-                if(polyline) mainMap.removeLayer(polyline);
-                polyline = L.polyline(detailedRouteLatLngs, {color: '#2e7d32', weight: 5}).addTo(mainMap);
-                mainMap.fitBounds(polyline.getBounds(), {padding: [30, 30]});
-                setTimeout(playRouteAnimation, 500);
-            } else { drawStraightLine(latlngs); }
-        } catch(e) { drawStraightLine(latlngs); }
-    }
-
-    function drawStraightLine(latlngs) {
-        detailedRouteLatLngs = latlngs; 
+    // ✨ 구간별로 통신하여 교통편 이모티콘을 바꾸기 위한 스마트 라우팅
+    async function fetchAndDrawRoute(placesList) {
         if(polyline) mainMap.removeLayer(polyline);
-        polyline = L.polyline(latlngs, {color: '#2e7d32', weight: 4, dashArray: '10, 10'}).addTo(mainMap);
-        mainMap.fitBounds(polyline.getBounds(), {padding: [30, 30]});
+        if(movingMarker) mainMap.removeLayer(movingMarker);
+        detailedRouteSegments = [];
+        let allLatLngs = [];
+
+        for(let i=0; i<placesList.length-1; i++) {
+            let p1 = placesList[i];
+            let p2 = placesList[i+1];
+            let mode = getTransitMode(p1.id, p2.id) || 'walk';
+            
+            let coordsStr = `${p1.lng},${p1.lat};${p2.lng},${p2.lat}`;
+            let url = `https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`;
+
+            let segmentCoords = [];
+            try {
+                let res = await fetch(url);
+                let data = await res.json();
+                if(data.code === 'Ok' && data.routes.length > 0) {
+                    segmentCoords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                } else {
+                    segmentCoords = [[p1.lat, p1.lng], [p2.lat, p2.lng]];
+                }
+            } catch(e) {
+                segmentCoords = [[p1.lat, p1.lng], [p2.lat, p2.lng]];
+            }
+            detailedRouteSegments.push({ mode: mode, coords: segmentCoords });
+            allLatLngs.push(...segmentCoords);
+        }
+
+        polyline = L.polyline(allLatLngs, {color: '#2e7d32', weight: 5}).addTo(mainMap);
+        mainMap.fitBounds(polyline.getBounds(), {padding: [40, 40]});
         setTimeout(playRouteAnimation, 500);
     }
 
+    // ✨ 애니메이션이 진행될 때 설정한 교통수단으로 이모티콘이 실시간 변신!
     function playRouteAnimation() {
-        if(detailedRouteLatLngs.length < 2) return;
+        if(detailedRouteSegments.length === 0) return;
         if(movingMarker) mainMap.removeLayer(movingMarker);
         if(animTimer) clearTimeout(animTimer);
 
-        movingMarker = L.marker(detailedRouteLatLngs[0], {icon: characterIcon}).addTo(mainMap);
-        let currentIndex = 1;
-        let speed = Math.max(25, Math.floor(1000 / detailedRouteLatLngs.length));
+        let currentSegment = 0;
+        let currentCoordIdx = 0;
+        
+        // 전체 구간 좌표 개수 계산 (일정한 속도 유지를 위해)
+        let totalCoords = detailedRouteSegments.reduce((sum, seg) => sum + seg.coords.length, 0);
+        let speed = Math.max(25, Math.floor(1000 / totalCoords));
+
+        // 이모티콘 바꿔주는 마법의 함수
+        function updateMarkerIcon(mode, coord) {
+            let emoji = '🚶';
+            if(mode === 'bus') emoji = '🚌';
+            if(mode === 'subway') emoji = '🚇';
+            if(mode === 'taxi') emoji = '🚕';
+            
+            const icon = L.divIcon({
+                html: `<div style="background:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:2px solid #4caf50; font-size:18px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${emoji}</div>`,
+                className: 'moving-character', iconSize: [30, 30], iconAnchor: [15, 15]
+            });
+
+            if(!movingMarker) {
+                movingMarker = L.marker(coord, {icon: icon, zIndexOffset: 1000}).addTo(mainMap);
+            } else {
+                movingMarker.setIcon(icon);
+            }
+        }
 
         function moveNext() {
-            if(currentIndex >= detailedRouteLatLngs.length) {
-                animTimer = setTimeout(() => { if(movingMarker) mainMap.removeLayer(movingMarker); }, 2000); return;
+            if(currentSegment >= detailedRouteSegments.length) {
+                animTimer = setTimeout(() => { if(movingMarker) mainMap.removeLayer(movingMarker); movingMarker = null; }, 2000);
+                return;
             }
-            document.querySelectorAll('.moving-character').forEach(el => el.style.transition = 'none');
-            movingMarker.setLatLng(detailedRouteLatLngs[currentIndex]);
-            currentIndex++;
+
+            let segment = detailedRouteSegments[currentSegment];
+            
+            // 좌표가 없는 에러 방지
+            if(!segment || segment.coords.length === 0) {
+                currentSegment++; currentCoordIdx = 0; moveNext(); return;
+            }
+
+            // 새로운 구간에 진입할 때 이모티콘 교체!
+            if(currentCoordIdx === 0) {
+                updateMarkerIcon(segment.mode, segment.coords[0]);
+            }
+
+            movingMarker.setLatLng(segment.coords[currentCoordIdx]);
+            currentCoordIdx++;
+
+            if(currentCoordIdx >= segment.coords.length) {
+                currentSegment++;
+                currentCoordIdx = 0;
+            }
+
             animTimer = setTimeout(moveNext, speed); 
         }
-        animTimer = setTimeout(moveNext, 500);
+
+        moveNext();
     }
 
     async function submitPlace() {
         const pName = document.getElementById('place_name').value || document.getElementById('map-search-input').value || "직접 지정한 위치";
-        
         const data = {
-            trip_name: CURRENT_TRIP, 
-            visit_date: document.getElementById('visit_date').value,
-            visit_time: document.getElementById('visit_time').value, 
-            place_name: pName,
-            lat: parseFloat(document.getElementById('lat').value), 
-            lng: parseFloat(document.getElementById('lng').value),
+            trip_name: CURRENT_TRIP, visit_date: document.getElementById('visit_date').value,
+            visit_time: document.getElementById('visit_time').value, place_name: pName,
+            lat: parseFloat(document.getElementById('lat').value), lng: parseFloat(document.getElementById('lng').value),
             category: document.getElementById('category').value
         };
         
-        if(!data.visit_date || !data.visit_time || isNaN(data.lat)) { 
-            alert("❗ 필수 입력 정보(날짜, 시간, 위치)가 빠져있습니다!"); return; 
-        }
+        if(!data.visit_date || !data.visit_time || isNaN(data.lat)) { alert("❗ 필수 입력 정보(날짜, 시간, 위치)가 빠져있습니다!"); return; }
 
         const btn = document.getElementById('btn-save');
-        btn.innerText = "저장 중...";
-        btn.disabled = true;
+        btn.innerText = "저장 중..."; btn.disabled = true;
 
         try {
             const method = editPlaceId ? 'PUT' : 'POST';
             const url = editPlaceId ? `${API_BASE_URL}/places/${editPlaceId}` : `${API_BASE_URL}/places`;
-            
             const res = await fetch(url, { method: method, headers: FETCH_HEADERS, body: JSON.stringify(data) });
-            
             if(res.ok) {
                 document.getElementById('add-modal').style.display = 'none';
                 selectDate(data.visit_date); loadPlacesData(); 
-            } else {
-                alert("❗ 저장 실패! (PC의 파이썬 서버가 정상 작동하는지 확인해주세요!)");
-            }
-        } catch(e) { 
-            alert("❗ 네트워크 오류! (ngrok 주소가 맞는지, PC 터널이 켜져 있는지 확인해주세요!)"); 
-        } finally {
-            btn.innerText = editPlaceId ? "수정 완료" : "저장하기";
-            btn.disabled = false;
-        }
+            } else { alert("❗ 저장 실패! (PC의 파이썬 서버가 정상 작동하는지 확인해주세요!)"); }
+        } catch(e) { alert("❗ 네트워크 오류! (ngrok 주소가 맞는지, PC 터널이 켜져 있는지 확인해주세요!)"); 
+        } finally { btn.innerText = editPlaceId ? "수정 완료" : "저장하기"; btn.disabled = false; }
     }
 
     async function deletePlace(id) {
         if(confirm("정말 삭제할까요?")) {
             try {
                 const res = await fetch(`${API_BASE_URL}/places/${id}`, { method: 'DELETE', headers: FETCH_HEADERS });
-                if(res.ok) { loadPlacesData(); }
-                else { alert("삭제 실패! 서버 에러"); }
+                if(res.ok) { loadPlacesData(); } else { alert("삭제 실패! 서버 에러"); }
             } catch(e) { alert("삭제 실패! 네트워크 오류"); }
         }
     }
