@@ -94,7 +94,6 @@
         .tab-content.active { display: block; }
 
         .schedule-item { display: flex; position: relative; }
-        
         .schedule-icon { width: 40px; height: 40px; border-radius: 50%; background: #ffebee; color: #d32f2f; display: flex; align-items: center; justify-content: center; font-size: 20px; z-index: 2; position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.08); flex-shrink: 0; }
         .schedule-icon.숙소 { background: #e3f2fd; color: #1976d2; }
         .schedule-icon.식당 { background: #fff3e0; color: #f57c00; }
@@ -105,6 +104,9 @@
         .s-title { font-size: 17px; font-weight: bold; margin-bottom: 10px; color: var(--text-main); }
         .s-btn { display: flex; align-items: center; gap: 4px; padding: 8px 12px; border-radius: 25px; border: 1px solid #e0e0e0; font-size: 12px; background: white; cursor: pointer; transition: 0.2s; font-weight: bold; color: var(--text-sub);}
         
+        .transit-badge { position: absolute; left: 20px; bottom: -30px; transform: translate(-50%, 50%); z-index: 2; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.2s; border: 2px solid #e0e0e0; background: white; color: #333; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+        .transit-badge:hover { transform: translate(-50%, 50%) scale(1.05); }
+
         #map-container { height: 500px; width: 100%; border-radius: 24px; border: 3px solid #e8f5e9; overflow: hidden; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
         .moving-character { z-index: 1000 !important; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3)); }
         
@@ -228,7 +230,7 @@
     <button class="fab-add" onclick="openAddModal()"><span class="material-symbols-outlined">add</span></button>
 </div>
 
-<!-- 장소 추가 팝업 -->
+<!-- 장소 추가 모달 -->
 <div id="add-modal" class="modal-overlay" onclick="closeModal(event, 'add-modal')">
     <div class="modal-content">
         <button class="modal-close" onclick="closeModal(event, 'add-modal', true)">&times;</button>
@@ -265,17 +267,30 @@
     </div>
 </div>
 
-<!-- 교통편 추가 팝업 -->
+<!-- ✨ 교통편 추가 팝업 (자차 포함) -->
 <div id="transit-modal" class="modal-overlay" onclick="closeModal(event, 'transit-modal')">
-    <div class="modal-content" style="text-align: center; max-width: 320px;">
+    <div class="modal-content" style="text-align: center; max-width: 350px;">
         <button class="modal-close" onclick="closeModal(event, 'transit-modal', true)">&times;</button>
         <h3 style="color: var(--primary-dark); margin-top: 0; margin-bottom: 20px; font-weight: 900;">어떻게 이동하시나요?</h3>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <button onclick="setTransitMode('walk')" style="padding: 20px; font-size: 18px; border-radius: 20px; border: 2px solid #e0e0e0; background: white; cursor: pointer; font-weight: bold; transition: 0.2s;">🚶 도보</button>
-            <button onclick="setTransitMode('bus')" style="padding: 20px; font-size: 18px; border-radius: 20px; border: 2px solid #e0e0e0; background: white; cursor: pointer; font-weight: bold; transition: 0.2s;">🚌 버스</button>
-            <button onclick="setTransitMode('subway')" style="padding: 20px; font-size: 18px; border-radius: 20px; border: 2px solid #e0e0e0; background: white; cursor: pointer; font-weight: bold; transition: 0.2s;">🚇 지하철</button>
-            <button onclick="setTransitMode('taxi')" style="padding: 20px; font-size: 18px; border-radius: 20px; border: 2px solid #e0e0e0; background: white; cursor: pointer; font-weight: bold; transition: 0.2s;">🚕 택시</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+            <button id="tbtn-walk" onclick="selectTransitMode('walk')" style="padding: 15px; font-size: 16px; border-radius: 15px; border: 2px solid #e0e0e0; background: white; cursor: pointer; font-weight: bold; transition: 0.2s;">🚶 도보</button>
+            <button id="tbtn-car" onclick="selectTransitMode('car')" style="padding: 15px; font-size: 16px; border-radius: 15px; border: 2px solid #e0e0e0; background: white; cursor: pointer; font-weight: bold; transition: 0.2s;">🚗 자차</button>
+            <button id="tbtn-bus" onclick="selectTransitMode('bus')" style="padding: 15px; font-size: 16px; border-radius: 15px; border: 2px solid #e0e0e0; background: white; cursor: pointer; font-weight: bold; transition: 0.2s;">🚌 버스</button>
+            <button id="tbtn-subway" onclick="selectTransitMode('subway')" style="padding: 15px; font-size: 16px; border-radius: 15px; border: 2px solid #e0e0e0; background: white; cursor: pointer; font-weight: bold; transition: 0.2s;">🚇 지하철</button>
+            <button id="tbtn-taxi" onclick="selectTransitMode('taxi')" style="grid-column: 1 / -1; padding: 15px; font-size: 16px; border-radius: 15px; border: 2px solid #e0e0e0; background: white; cursor: pointer; font-weight: bold; transition: 0.2s;">🚕 택시</button>
+        </div>
+
+        <div id="transit-details" style="display:none; text-align: left;">
+            <div id="transit-memo-group" class="input-group">
+                <label>교통편 상세 (선택)</label>
+                <input type="text" id="transit-memo" placeholder="예: 358번 버스, 신칸센">
+            </div>
+            <div class="input-group">
+                <label>소요 시간 (선택)</label>
+                <input type="text" id="transit-time" placeholder="예: 40분, 1시간 10분">
+            </div>
+            <button class="btn-submit" onclick="saveTransitDetails()">확인</button>
         </div>
         
         <input type="hidden" id="transit-p1">
@@ -283,7 +298,7 @@
     </div>
 </div>
 
-<!-- ✨ 커스텀 삭제 팝업 (초록색 귀여운 디자인 적용) -->
+<!-- 귀여운 삭제 팝업 -->
 <div id="delete-trip-modal" class="modal-overlay" onclick="closeModal(event, 'delete-trip-modal')">
     <div class="modal-content" style="text-align: center; max-width: 300px; padding: 30px 20px;">
         <button class="modal-close" onclick="closeModal(event, 'delete-trip-modal', true)">&times;</button>
@@ -330,11 +345,7 @@
 
 <script>
     const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev/api"; 
-    
-    const FETCH_HEADERS = {
-        'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true' 
-    };
+    const FETCH_HEADERS = { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' };
 
     let CURRENT_TRIP = "";
     let currentSelectedDate = "";
@@ -354,18 +365,66 @@
     function getTransitMode(p1, p2) {
         return localStorage.getItem(`js_planner_transit_${CURRENT_TRIP}_${p1}_${p2}`);
     }
-    
+
+    let selectedTMode = 'walk';
+
     function openTransitModal(p1, p2) {
         document.getElementById('transit-p1').value = p1;
         document.getElementById('transit-p2').value = p2;
+        document.getElementById('transit-details').style.display = 'none';
+
+        ['walk', 'car', 'bus', 'subway', 'taxi'].forEach(m => {
+            let btn = document.getElementById('tbtn-' + m);
+            btn.style.borderColor = '#e0e0e0'; btn.style.background = 'white';
+        });
+        document.getElementById('transit-memo').value = '';
+        document.getElementById('transit-time').value = '';
+
+        let existing = getTransitMode(p1, p2);
+        if(existing) {
+            try {
+                let d = JSON.parse(existing);
+                selectTransitMode(d.mode);
+                document.getElementById('transit-memo').value = d.memo || '';
+                document.getElementById('transit-time').value = d.time || '';
+            } catch(e) { selectTransitMode('walk'); }
+        }
+
         document.getElementById('transit-modal').style.display = 'flex';
     }
 
-    function setTransitMode(mode) {
+    function selectTransitMode(mode) {
+        selectedTMode = mode;
+        ['walk', 'car', 'bus', 'subway', 'taxi'].forEach(m => {
+            let btn = document.getElementById('tbtn-' + m);
+            if(m === mode) {
+                btn.style.borderColor = 'var(--primary)';
+                btn.style.background = 'var(--primary-light)';
+            } else {
+                btn.style.borderColor = '#e0e0e0';
+                btn.style.background = 'white';
+            }
+        });
+        
+        document.getElementById('transit-details').style.display = 'block';
+        if (mode === 'bus' || mode === 'subway') {
+            document.getElementById('transit-memo-group').style.display = 'block';
+        } else {
+            document.getElementById('transit-memo-group').style.display = 'none';
+            document.getElementById('transit-memo').value = ''; 
+        }
+    }
+
+    function saveTransitDetails() {
         let p1 = document.getElementById('transit-p1').value;
         let p2 = document.getElementById('transit-p2').value;
-        localStorage.setItem(`js_planner_transit_${CURRENT_TRIP}_${p1}_${p2}`, mode);
-        document.getElementById('transit-modal').style.display = 'none';
+        let data = {
+            mode: selectedTMode,
+            memo: document.getElementById('transit-memo').value.trim(),
+            time: document.getElementById('transit-time').value.trim()
+        };
+        localStorage.setItem(`js_planner_transit_${CURRENT_TRIP}_${p1}_${p2}`, JSON.stringify(data));
+        closeModal(new Event('click'), 'transit-modal', true);
         renderPlacesForCurrentDate();
     }
 
@@ -378,32 +437,21 @@
             
             saved.forEach((trip, index) => {
                 const wrapper = document.createElement('div');
-                wrapper.style.display = 'flex';
-                wrapper.style.gap = '8px';
-                wrapper.style.marginBottom = '8px';
-                
+                wrapper.style.display = 'flex'; wrapper.style.gap = '8px'; wrapper.style.marginBottom = '8px';
                 const btn = document.createElement('div');
                 btn.className = 'recent-trip-btn';
-                btn.style.margin = '0';
-                btn.style.flex = '1';
+                btn.style.margin = '0'; btn.style.flex = '1';
                 btn.innerHTML = `<span>📍 ${trip.dest}</span> <span style="font-size:12px; font-weight:normal;">${trip.start} ~ ${trip.end}</span>`;
                 btn.onclick = () => startPlanner(trip.dest, new Date(trip.start), new Date(trip.end));
                 
-                // ✨ 깔끔한 빨간 휴지통 버튼 생성
                 const delBtn = document.createElement('button');
                 delBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px;">delete</span>';
-                delBtn.style.background = '#ffebee';
-                delBtn.style.color = '#d32f2f';
-                delBtn.style.border = 'none';
-                delBtn.style.borderRadius = '16px';
-                delBtn.style.padding = '0 15px';
-                delBtn.style.cursor = 'pointer';
+                delBtn.style.background = '#ffebee'; delBtn.style.color = '#d32f2f'; delBtn.style.border = 'none';
+                delBtn.style.borderRadius = '16px'; delBtn.style.padding = '0 15px'; delBtn.style.cursor = 'pointer';
                 delBtn.style.transition = '0.2s';
                 delBtn.onclick = (e) => openDeleteTripModal(e, index);
                 
-                wrapper.appendChild(btn);
-                wrapper.appendChild(delBtn);
-                list.appendChild(wrapper);
+                wrapper.appendChild(btn); wrapper.appendChild(delBtn); list.appendChild(wrapper);
             });
         } else {
             document.getElementById('recent-trips-container').style.display = 'none';
@@ -411,8 +459,6 @@
     }
 
     let tripToDeleteIndex = null;
-    
-    // ✨ 삭제 팝업 띄우기 함수
     function openDeleteTripModal(event, index) {
         event.stopPropagation();
         tripToDeleteIndex = index;
@@ -420,7 +466,6 @@
         document.getElementById('delete-trip-modal').style.display = 'flex';
     }
 
-    // ✨ 패스워드 검증 후 삭제 진행
     function confirmDeleteTrip() {
         const pwd = document.getElementById('delete-trip-pwd').value;
         if(pwd === "0000") {
@@ -430,9 +475,7 @@
             loadRecentTrips();
             closeModal(new Event('click'), 'delete-trip-modal', true);
             alert("삭제되었습니다! 🗑️");
-        } else {
-            alert("❗ 패스워드가 틀렸습니다.");
-        }
+        } else { alert("❗ 패스워드가 틀렸습니다."); }
     }
 
     function shareTrip() {
@@ -636,7 +679,6 @@
         if(mapInitialized) renderMapMarkers(filtered);
     }
 
-    // ✨ 정중앙 배치를 위해 구조 및 여백 최적화 
     function renderScheduleList(places) {
         const listDiv = document.getElementById('schedule-list');
         let html = '';
@@ -670,18 +712,34 @@
                 </div>
                 ${!isLast ? (() => {
                     let nextP = places[index+1];
-                    let mode = getTransitMode(p.id, nextP.id);
-                    let btnText = '교통편 추가';
-                    let btnStyle = 'background: white; border: 2px solid #e0e0e0; color: #333;'; 
-
-                    if(mode === 'bus') { btnText = '🚌 버스'; }
-                    if(mode === 'subway') { btnText = '🚇 지하철'; }
-                    if(mode === 'taxi') { btnText = '🚕 택시'; }
-                    if(mode === 'walk') { btnText = '🚶 도보'; }
+                    let rawData = getTransitMode(p.id, nextP.id);
+                    let mode = 'walk', memo = '', time = '';
                     
+                    if(rawData) {
+                        try {
+                            let d = JSON.parse(rawData);
+                            mode = d.mode || 'walk'; memo = d.memo || ''; time = d.time || '';
+                        } catch(e) { mode = rawData; }
+                    }
+
+                    let emoji = '🚶'; let modeStr = '도보';
+                    if(mode === 'car') { emoji = '🚗'; modeStr = '자차'; }
+                    if(mode === 'bus') { emoji = '🚌'; modeStr = '버스'; }
+                    if(mode === 'subway') { emoji = '🚇'; modeStr = '지하철'; }
+                    if(mode === 'taxi') { emoji = '🚕'; modeStr = '택시'; }
+                    
+                    let displayStr = `${emoji} `;
+                    if(memo) { displayStr += `${memo} `; } 
+                    else if (mode === 'walk' || mode === 'taxi' || mode === 'car') { displayStr += `${modeStr} `; }
+                    
+                    if(time) { displayStr += `${time}`; }
+                    
+                    displayStr = displayStr.trim();
+                    if(displayStr === emoji) displayStr = `${emoji} 교통편 추가`; 
+
                     return `
-                    <button onclick="openTransitModal(${p.id}, ${nextP.id})" style="position: absolute; left: 20px; bottom: -30px; transform: translate(-50%, 50%); z-index: 2; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.2s; ${btnStyle}">
-                        ${btnText}
+                    <button class="transit-badge" onclick="openTransitModal(${p.id}, ${nextP.id})">
+                        ${displayStr}
                     </button>
                     `;
                 })() : ''}
@@ -734,7 +792,13 @@
         for(let i=0; i<placesList.length-1; i++) {
             let p1 = placesList[i];
             let p2 = placesList[i+1];
-            let mode = getTransitMode(p1.id, p2.id) || 'walk';
+            
+            let rawData = getTransitMode(p1.id, p2.id);
+            let mode = 'walk';
+            if(rawData) {
+                try { let d = JSON.parse(rawData); mode = d.mode || 'walk'; } 
+                catch(e) { mode = rawData; }
+            }
             
             let coordsStr = `${p1.lng},${p1.lat};${p2.lng},${p2.lat}`;
             let url = `https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`;
@@ -773,6 +837,7 @@
 
         function updateMarkerIcon(mode, coord) {
             let emoji = '🚶';
+            if(mode === 'car') emoji = '🚗';
             if(mode === 'bus') emoji = '🚌';
             if(mode === 'subway') emoji = '🚇';
             if(mode === 'taxi') emoji = '🚕';
