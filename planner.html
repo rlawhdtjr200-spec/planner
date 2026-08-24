@@ -99,13 +99,14 @@
         .schedule-icon.식당 { background: #fff3e0; color: #f57c00; }
         .schedule-icon.공항 { background: #e8eaf6; color: #3f51b5; }
         
-        .schedule-card { margin-left: 15px; background: white; padding: 15px 18px; border-radius: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); flex: 1; border: 1px solid #f0f0f0; }
+        .schedule-card { background: white; padding: 15px 18px; border-radius: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; }
         .s-time { font-weight: 900; color: var(--primary); font-size: 16px; margin-bottom: 5px; }
         .s-title { font-size: 17px; font-weight: bold; margin-bottom: 10px; color: var(--text-main); }
         .s-btn { display: flex; align-items: center; gap: 4px; padding: 8px 12px; border-radius: 25px; border: 1px solid #e0e0e0; font-size: 12px; background: white; cursor: pointer; transition: 0.2s; font-weight: bold; color: var(--text-sub);}
         
-        .transit-badge { position: absolute; left: 20px; bottom: -30px; transform: translate(-50%, 50%); z-index: 2; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.2s; border: 2px solid #e0e0e0; background: white; color: #333; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
-        .transit-badge:hover { transform: translate(-50%, 50%) scale(1.05); }
+        /* ✨ 카드 사이에 들어가는 깔끔한 중앙 뱃지 (그려주신 사진 완벽 구현!) */
+        .transit-badge { padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.2s; border: 2px solid #e0e0e0; background: white; color: #333; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 4px; z-index: 2; position: relative; }
+        .transit-badge:hover { transform: scale(1.05); }
 
         #map-container { height: 500px; width: 100%; border-radius: 24px; border: 3px solid #e8f5e9; overflow: hidden; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
         .moving-character { z-index: 1000 !important; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3)); }
@@ -239,9 +240,10 @@
             <label>방문 날짜</label>
             <input type="date" id="visit_date" required>
         </div>
+        <!-- ✨ 시간 입력을 '선택'으로 변경 (미입력시 자동 계산) -->
         <div class="input-group">
-            <label>방문 시간</label>
-            <input type="time" id="visit_time" required>
+            <label>방문 시간 <span style="color:#f44336; font-weight:normal;">(선택 - 미입력 시 자동 계산됩니다)</span></label>
+            <input type="time" id="visit_time">
         </div>
         <div class="input-group">
             <label>카테고리</label>
@@ -267,7 +269,7 @@
     </div>
 </div>
 
-<!-- ✨ 교통편 추가 팝업 (자차 포함) -->
+<!-- ✨ 버스/지하철에만 메모 기능이 있는 커스텀 교통편 팝업 -->
 <div id="transit-modal" class="modal-overlay" onclick="closeModal(event, 'transit-modal')">
     <div class="modal-content" style="text-align: center; max-width: 350px;">
         <button class="modal-close" onclick="closeModal(event, 'transit-modal', true)">&times;</button>
@@ -283,11 +285,11 @@
 
         <div id="transit-details" style="display:none; text-align: left;">
             <div id="transit-memo-group" class="input-group">
-                <label>교통편 상세 (선택)</label>
+                <label>어떤 걸 타나요? (선택)</label>
                 <input type="text" id="transit-memo" placeholder="예: 358번 버스, 신칸센">
             </div>
             <div class="input-group">
-                <label>소요 시간 (선택)</label>
+                <label>소요 시간 (선택 - 다음 장소 시간 자동 계산)</label>
                 <input type="text" id="transit-time" placeholder="예: 40분, 1시간 10분">
             </div>
             <button class="btn-submit" onclick="saveTransitDetails()">확인</button>
@@ -298,7 +300,6 @@
     </div>
 </div>
 
-<!-- 귀여운 삭제 팝업 -->
 <div id="delete-trip-modal" class="modal-overlay" onclick="closeModal(event, 'delete-trip-modal')">
     <div class="modal-content" style="text-align: center; max-width: 300px; padding: 30px 20px;">
         <button class="modal-close" onclick="closeModal(event, 'delete-trip-modal', true)">&times;</button>
@@ -407,6 +408,7 @@
         });
         
         document.getElementById('transit-details').style.display = 'block';
+        // 버스와 지하철일 경우에만 메모칸 표시 (나머지는 숨김 처리)
         if (mode === 'bus' || mode === 'subway') {
             document.getElementById('transit-memo-group').style.display = 'block';
         } else {
@@ -672,13 +674,67 @@
         } catch (error) { console.error("로딩 실패", error); }
     }
 
+    // ✨ 입력한 분/시간 텍스트를 숫자로 변환하는 마법의 계산기
+    function parseTransitMins(timeStr) {
+        if(!timeStr) return 0;
+        let mins = 0;
+        let hMatch = timeStr.match(/(\d+)\s*시간/);
+        if(hMatch) mins += parseInt(hMatch[1]) * 60;
+        let mMatch = timeStr.match(/(\d+)\s*분/);
+        if(mMatch) mins += parseInt(mMatch[1]);
+        if(!hMatch && !mMatch) {
+            let num = parseInt(timeStr.replace(/[^0-9]/g, ''));
+            if(!isNaN(num)) mins += num;
+        }
+        return mins;
+    }
+
+    // ✨ 이전 장소 시간에 교통편 이동 시간을 더해서 새로운 시간 반환
+    function addMinsToTime(timeStr, mins) {
+        if(!timeStr) return "";
+        let parts = timeStr.split(':');
+        if(parts.length !== 2) return timeStr;
+        let d = new Date();
+        d.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0);
+        d.setMinutes(d.getMinutes() + mins);
+        return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
     function renderPlacesForCurrentDate() {
         let filtered = allPlaces.filter(p => p.visit_date === currentSelectedDate);
-        filtered.sort((a, b) => a.visit_time.localeCompare(b.visit_time));
+        
+        // 1. 시간이 있는 애들끼리 정렬하고 없는 애들은 뒤로
+        filtered.sort((a, b) => {
+            if(a.visit_time && b.visit_time) return a.visit_time.localeCompare(b.visit_time);
+            if(a.visit_time && !b.visit_time) return -1;
+            if(!a.visit_time && b.visit_time) return 1;
+            return a.id - b.id;
+        });
+
+        // ✨ 2. 시간이 없는 곳은 '이전 시간 + 교통수단 소요시간'으로 자동 계산!
+        for(let i = 0; i < filtered.length; i++) {
+            if(!filtered[i].visit_time) {
+                if(i === 0) {
+                    filtered[i].computed_time = "10:00"; // 첫 일정인데 시간 안적었으면 기본 10:00
+                } else {
+                    let prevP = filtered[i-1];
+                    let rawData = getTransitMode(prevP.id, filtered[i].id);
+                    let tMins = 0;
+                    if(rawData) {
+                        try { let d = JSON.parse(rawData); tMins = parseTransitMins(d.time); } catch(e) {}
+                    }
+                    filtered[i].computed_time = addMinsToTime(prevP.computed_time || prevP.visit_time, tMins);
+                }
+            } else {
+                filtered[i].computed_time = filtered[i].visit_time;
+            }
+        }
+
         renderScheduleList(filtered);
         if(mapInitialized) renderMapMarkers(filtered);
     }
 
+    // ✨ 정중앙 배치 & 검은 세로선 디자인 적용
     function renderScheduleList(places) {
         const listDiv = document.getElementById('schedule-list');
         let html = '';
@@ -694,55 +750,65 @@
             let isLast = (index === places.length - 1);
 
             html += `
-            <div class="schedule-item" style="margin-bottom: ${isLast ? '25px' : '60px'};">
+            <div class="schedule-item">
                 ${!isLast ? `<div style="position: absolute; left: 18px; top: 35px; bottom: -60px; width: 4px; background: #c8e6c9; z-index: 1; border-radius: 2px;"></div>` : ''}
                 <div class="schedule-icon ${p.category}"><span class="material-symbols-outlined">${iconName}</span></div>
-                <div class="schedule-card" style="margin-bottom: 0;">
-                    <div style="display:flex; justify-content:space-between;">
-                        <div class="s-time">${p.visit_time}</div>
-                        <div>
-                            <button style="background:none; border:none; cursor:pointer; color:#888;" onclick="openEditModal(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
-                            <button style="background:none; border:none; cursor:pointer; color:#d32f2f;" onclick="deletePlace(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+                <div style="flex: 1; margin-left: 15px;">
+                    <div class="schedule-card" style="margin-bottom: 0;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <div class="s-time" style="color: ${p.visit_time ? 'var(--primary-dark)' : '#ff9800'}">
+                                ${p.computed_time} ${!p.visit_time ? '<span style="font-size:11px; font-weight:normal;">(자동)</span>' : ''}
+                            </div>
+                            <div>
+                                <button style="background:none; border:none; cursor:pointer; color:#888;" onclick="openEditModal(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
+                                <button style="background:none; border:none; cursor:pointer; color:#d32f2f;" onclick="deletePlace(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+                            </div>
+                        </div>
+                        <div class="s-title">${p.place_name}</div>
+                        <div class="s-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}')" style="width:fit-content; cursor:pointer;">
+                            <span class="material-symbols-outlined" style="font-size:16px;">directions</span> 길찾기
                         </div>
                     </div>
-                    <div class="s-title">${p.place_name}</div>
-                    <div class="s-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}')" style="width:fit-content; cursor:pointer;">
-                        <span class="material-symbols-outlined" style="font-size:16px;">directions</span> 길찾기
-                    </div>
+                    
+                    ${!isLast ? (() => {
+                        let nextP = places[index+1];
+                        let rawData = getTransitMode(p.id, nextP.id);
+                        let mode = 'walk', memo = '', time = '';
+                        
+                        if(rawData) {
+                            try {
+                                let d = JSON.parse(rawData);
+                                mode = d.mode || 'walk'; memo = d.memo || ''; time = d.time || '';
+                            } catch(e) { mode = rawData; }
+                        }
+
+                        let emoji = '🚶'; let modeStr = '도보';
+                        if(mode === 'car') { emoji = '🚗'; modeStr = '자차'; }
+                        if(mode === 'bus') { emoji = '🚌'; modeStr = '버스'; }
+                        if(mode === 'subway') { emoji = '🚇'; modeStr = '지하철'; }
+                        if(mode === 'taxi') { emoji = '🚕'; modeStr = '택시'; }
+                        
+                        let displayStr = `${emoji} `;
+                        if(memo) { displayStr += `${memo} `; } 
+                        else if (mode === 'walk' || mode === 'taxi' || mode === 'car') { displayStr += `${modeStr} `; }
+                        else { displayStr += `${modeStr} `; }
+                        
+                        if(time) { displayStr += `${time}`; }
+                        
+                        displayStr = displayStr.trim();
+                        if(displayStr === emoji) displayStr = `${emoji} 교통편 추가`; 
+
+                        // ✨ 카드 사이 정중앙에 검은색 세로선과 예쁜 뱃지 생성!
+                        return `
+                        <div style="position: relative; height: 60px; display: flex; align-items: center; justify-content: center; z-index: 2;">
+                            <div style="position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: #333; z-index: -1;"></div>
+                            <button class="transit-badge" onclick="openTransitModal(${p.id}, ${nextP.id})">
+                                ${displayStr}
+                            </button>
+                        </div>
+                        `;
+                    })() : '<div style="height:25px;"></div>'}
                 </div>
-                ${!isLast ? (() => {
-                    let nextP = places[index+1];
-                    let rawData = getTransitMode(p.id, nextP.id);
-                    let mode = 'walk', memo = '', time = '';
-                    
-                    if(rawData) {
-                        try {
-                            let d = JSON.parse(rawData);
-                            mode = d.mode || 'walk'; memo = d.memo || ''; time = d.time || '';
-                        } catch(e) { mode = rawData; }
-                    }
-
-                    let emoji = '🚶'; let modeStr = '도보';
-                    if(mode === 'car') { emoji = '🚗'; modeStr = '자차'; }
-                    if(mode === 'bus') { emoji = '🚌'; modeStr = '버스'; }
-                    if(mode === 'subway') { emoji = '🚇'; modeStr = '지하철'; }
-                    if(mode === 'taxi') { emoji = '🚕'; modeStr = '택시'; }
-                    
-                    let displayStr = `${emoji} `;
-                    if(memo) { displayStr += `${memo} `; } 
-                    else if (mode === 'walk' || mode === 'taxi' || mode === 'car') { displayStr += `${modeStr} `; }
-                    
-                    if(time) { displayStr += `${time}`; }
-                    
-                    displayStr = displayStr.trim();
-                    if(displayStr === emoji) displayStr = `${emoji} 교통편 추가`; 
-
-                    return `
-                    <button class="transit-badge" onclick="openTransitModal(${p.id}, ${nextP.id})">
-                        ${displayStr}
-                    </button>
-                    `;
-                })() : ''}
             </div>`;
         });
         listDiv.innerHTML = html;
@@ -763,8 +829,9 @@
 
             const marker = L.marker([p.lat, p.lng], {icon: numIcon}).addTo(mainMap);
             
+            // 지도 위 말풍선에도 자동 계산된 시간이 뜨도록 설정!
             marker.bindTooltip(
-                `<span class="t-time">${p.visit_time}</span> <span class="t-name">${p.place_name}</span>`, 
+                `<span class="t-time">${p.computed_time}</span> <span class="t-name">${p.place_name}</span>`, 
                 { permanent: true, direction: 'top', offset: [0, -15], className: 'custom-map-label' }
             );
 
@@ -887,13 +954,18 @@
     async function submitPlace() {
         const pName = document.getElementById('place_name').value || document.getElementById('map-search-input').value || "직접 지정한 위치";
         const data = {
-            trip_name: CURRENT_TRIP, visit_date: document.getElementById('visit_date').value,
-            visit_time: document.getElementById('visit_time').value, place_name: pName,
-            lat: parseFloat(document.getElementById('lat').value), lng: parseFloat(document.getElementById('lng').value),
+            trip_name: CURRENT_TRIP, 
+            visit_date: document.getElementById('visit_date').value,
+            // ✨ 미입력 시 서버에 빈 값으로 전송되도록 처리!
+            visit_time: document.getElementById('visit_time').value || "", 
+            place_name: pName,
+            lat: parseFloat(document.getElementById('lat').value), 
+            lng: parseFloat(document.getElementById('lng').value),
             category: document.getElementById('category').value
         };
         
-        if(!data.visit_date || !data.visit_time || isNaN(data.lat)) { alert("❗ 필수 입력 정보(날짜, 시간, 위치)가 빠져있습니다!"); return; }
+        // 시간 입력 조건 제거
+        if(!data.visit_date || isNaN(data.lat)) { alert("❗ 필수 입력 정보(날짜, 위치)가 빠져있습니다!"); return; }
 
         const btn = document.getElementById('btn-save');
         btn.innerText = "저장 중..."; btn.disabled = true;
