@@ -269,7 +269,7 @@
 <div id="transit-modal" class="modal-overlay" onclick="closeModal(event, 'transit-modal')">
     <div class="modal-content" style="text-align: center; max-width: 320px;">
         <button class="modal-close" onclick="closeModal(event, 'transit-modal', true)">&times;</button>
-        <h3 style="color: var(--primary-dark); margin-top: 0; margin-bottom: 20px;">어떻게 이동하시나요?</h3>
+        <h3 style="color: var(--primary-dark); margin-top: 0; margin-bottom: 20px; font-weight: 900;">어떻게 이동하시나요?</h3>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
             <button onclick="setTransitMode('walk')" style="padding: 20px; font-size: 18px; border-radius: 20px; border: 2px solid #e0e0e0; background: white; cursor: pointer; font-weight: bold; transition: 0.2s;">🚶 도보</button>
@@ -280,6 +280,23 @@
         
         <input type="hidden" id="transit-p1">
         <input type="hidden" id="transit-p2">
+    </div>
+</div>
+
+<!-- ✨ 커스텀 삭제 팝업 (초록색 귀여운 디자인 적용) -->
+<div id="delete-trip-modal" class="modal-overlay" onclick="closeModal(event, 'delete-trip-modal')">
+    <div class="modal-content" style="text-align: center; max-width: 300px; padding: 30px 20px;">
+        <button class="modal-close" onclick="closeModal(event, 'delete-trip-modal', true)">&times;</button>
+        <div style="font-size: 45px; margin-bottom: 10px;">🥺</div>
+        <h3 style="color: var(--primary-dark); margin-top: 0; margin-bottom: 10px; font-weight: 900;">진짜 삭제할꺼야?!</h3>
+        <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 20px;">삭제하려면 패스워드(0000)를 입력해줘!</p>
+        
+        <input type="password" id="delete-trip-pwd" placeholder="****" style="width: 100%; padding: 15px; border: 2px solid var(--primary-light); border-radius: 16px; font-size: 24px; text-align: center; letter-spacing: 10px; margin-bottom: 20px; background: #fafafa; outline: none; color: var(--primary-dark); font-weight: bold; transition: 0.2s;" onfocus="this.style.borderColor='var(--primary)'; this.style.background='white';">
+        
+        <div style="display: flex; gap: 10px;">
+            <button onclick="closeModal(new Event('click'), 'delete-trip-modal', true)" style="flex: 1; padding: 15px; border-radius: 20px; border: none; background: #f0f0f0; color: #555; font-weight: bold; cursor: pointer; font-size: 15px;">취소</button>
+            <button onclick="confirmDeleteTrip()" style="flex: 1; padding: 15px; border-radius: 20px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(76,175,80,0.3); font-size: 15px;">삭제하기</button>
+        </div>
     </div>
 </div>
 
@@ -309,11 +326,9 @@
     }
 </script>
 
-<!-- 과장님의 구글 API 키 적용 완료! -->
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U&libraries=places&callback=initAutocomplete" async defer></script>
 
 <script>
-    // 터널 주소 적용 완료!
     const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev/api"; 
     
     const FETCH_HEADERS = {
@@ -354,7 +369,6 @@
         renderPlacesForCurrentDate();
     }
 
-    // ✨ 최근 목록 불러오기 + 휴지통/비밀번호 삭제 기능 추가
     function loadRecentTrips() {
         const saved = JSON.parse(localStorage.getItem('js_planner_trips') || '[]');
         if(saved.length > 0) {
@@ -375,18 +389,17 @@
                 btn.innerHTML = `<span>📍 ${trip.dest}</span> <span style="font-size:12px; font-weight:normal;">${trip.start} ~ ${trip.end}</span>`;
                 btn.onclick = () => startPlanner(trip.dest, new Date(trip.start), new Date(trip.end));
                 
-                // 휴지통 버튼 생성
+                // ✨ 깔끔한 빨간 휴지통 버튼 생성
                 const delBtn = document.createElement('button');
                 delBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px;">delete</span>';
                 delBtn.style.background = '#ffebee';
                 delBtn.style.color = '#d32f2f';
                 delBtn.style.border = 'none';
-                delBtn.style.borderRadius = '18px';
+                delBtn.style.borderRadius = '16px';
                 delBtn.style.padding = '0 15px';
                 delBtn.style.cursor = 'pointer';
                 delBtn.style.transition = '0.2s';
-                delBtn.style.boxShadow = '0 4px 6px rgba(0,0,0,0.05)';
-                delBtn.onclick = (e) => deleteRecentTrip(e, index);
+                delBtn.onclick = (e) => openDeleteTripModal(e, index);
                 
                 wrapper.appendChild(btn);
                 wrapper.appendChild(delBtn);
@@ -397,18 +410,27 @@
         }
     }
 
-    // ✨ 최근 여행 삭제 함수 (패스워드 "0000" 고정!)
-    function deleteRecentTrip(event, index) {
-        event.stopPropagation(); // 버튼 클릭 시 여행으로 들어가는 것을 방지
-        let pwd = prompt("이 여행 계획을 지우시겠습니까?\\n패스워드를 입력하세요.");
-        
-        if (pwd === "0000") {
+    let tripToDeleteIndex = null;
+    
+    // ✨ 삭제 팝업 띄우기 함수
+    function openDeleteTripModal(event, index) {
+        event.stopPropagation();
+        tripToDeleteIndex = index;
+        document.getElementById('delete-trip-pwd').value = ''; 
+        document.getElementById('delete-trip-modal').style.display = 'flex';
+    }
+
+    // ✨ 패스워드 검증 후 삭제 진행
+    function confirmDeleteTrip() {
+        const pwd = document.getElementById('delete-trip-pwd').value;
+        if(pwd === "0000") {
             let saved = JSON.parse(localStorage.getItem('js_planner_trips') || '[]');
-            saved.splice(index, 1);
+            saved.splice(tripToDeleteIndex, 1);
             localStorage.setItem('js_planner_trips', JSON.stringify(saved));
             loadRecentTrips();
+            closeModal(new Event('click'), 'delete-trip-modal', true);
             alert("삭제되었습니다! 🗑️");
-        } else if (pwd !== null) {
+        } else {
             alert("❗ 패스워드가 틀렸습니다.");
         }
     }
@@ -614,6 +636,7 @@
         if(mapInitialized) renderMapMarkers(filtered);
     }
 
+    // ✨ 정중앙 배치를 위해 구조 및 여백 최적화 
     function renderScheduleList(places) {
         const listDiv = document.getElementById('schedule-list');
         let html = '';
@@ -629,10 +652,10 @@
             let isLast = (index === places.length - 1);
 
             html += `
-            <div class="schedule-item" style="margin-bottom: ${isLast ? '25px' : '0'};">
-                ${!isLast ? `<div style="position: absolute; left: 18px; top: 35px; bottom: -15px; width: 4px; background: #c8e6c9; z-index: 1; border-radius: 2px;"></div>` : ''}
+            <div class="schedule-item" style="margin-bottom: ${isLast ? '25px' : '60px'};">
+                ${!isLast ? `<div style="position: absolute; left: 18px; top: 35px; bottom: -60px; width: 4px; background: #c8e6c9; z-index: 1; border-radius: 2px;"></div>` : ''}
                 <div class="schedule-icon ${p.category}"><span class="material-symbols-outlined">${iconName}</span></div>
-                <div class="schedule-card" style="margin-bottom: ${isLast ? '0' : '15px'};">
+                <div class="schedule-card" style="margin-bottom: 0;">
                     <div style="display:flex; justify-content:space-between;">
                         <div class="s-time">${p.visit_time}</div>
                         <div>
@@ -645,27 +668,24 @@
                         <span class="material-symbols-outlined" style="font-size:16px;">directions</span> 길찾기
                     </div>
                 </div>
-            </div>`;
+                ${!isLast ? (() => {
+                    let nextP = places[index+1];
+                    let mode = getTransitMode(p.id, nextP.id);
+                    let btnText = '교통편 추가';
+                    let btnStyle = 'background: white; border: 2px solid #e0e0e0; color: #333;'; 
 
-            if (!isLast) {
-                let nextP = places[index+1];
-                let mode = getTransitMode(p.id, nextP.id);
-                let btnText = '교통편 추가하기';
-                let btnStyle = 'background: #ffea00; border: 2px solid #ffea00; color: #333;'; 
-
-                if(mode === 'bus') { btnText = '🚌 버스'; btnStyle = 'background: white; border: 2px solid #e0e0e0; color: #333;'; }
-                if(mode === 'subway') { btnText = '🚇 지하철'; btnStyle = 'background: white; border: 2px solid #e0e0e0; color: #333;'; }
-                if(mode === 'taxi') { btnText = '🚕 택시'; btnStyle = 'background: white; border: 2px solid #e0e0e0; color: #333;'; }
-                if(mode === 'walk') { btnText = '🚶 도보'; btnStyle = 'background: white; border: 2px solid #e0e0e0; color: #333;'; }
-
-                html += `
-                <div style="position: relative; height: 40px; margin-bottom: 15px; display: flex; align-items: center;">
-                    <div style="position: absolute; left: 18px; top: -15px; bottom: -15px; width: 4px; background: #c8e6c9; z-index: 1;"></div>
-                    <button onclick="openTransitModal(${p.id}, ${nextP.id})" style="position: relative; z-index: 2; margin-left: 55px; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15); transition: 0.2s; ${btnStyle}">
+                    if(mode === 'bus') { btnText = '🚌 버스'; }
+                    if(mode === 'subway') { btnText = '🚇 지하철'; }
+                    if(mode === 'taxi') { btnText = '🚕 택시'; }
+                    if(mode === 'walk') { btnText = '🚶 도보'; }
+                    
+                    return `
+                    <button onclick="openTransitModal(${p.id}, ${nextP.id})" style="position: absolute; left: 20px; bottom: -30px; transform: translate(-50%, 50%); z-index: 2; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.2s; ${btnStyle}">
                         ${btnText}
                     </button>
-                </div>`;
-            }
+                    `;
+                })() : ''}
+            </div>`;
         });
         listDiv.innerHTML = html;
     }
