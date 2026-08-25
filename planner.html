@@ -99,7 +99,6 @@
         .schedule-icon.식당 { background: #fff3e0; color: #f57c00; }
         .schedule-icon.공항 { background: #e8eaf6; color: #3f51b5; }
         
-        /* ✨ 카드 너비를 100%로 복구! */
         .schedule-card { width: 100%; background: white; padding: 15px 18px; border-radius: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; }
         .s-time { font-weight: 900; color: var(--primary); font-size: 16px; margin-bottom: 5px; }
         .s-title { font-size: 17px; font-weight: bold; margin-bottom: 10px; color: var(--text-main); }
@@ -107,6 +106,9 @@
         
         .transit-badge { padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.2s; border: 2px solid #e0e0e0; background: white; color: #333; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 4px; z-index: 2; position: relative; }
         .transit-badge:hover { transform: scale(1.05); }
+
+        /* ✨ 드래그 중에 보여질 가짜 카드(유령) 스타일 */
+        .sortable-ghost { opacity: 0.3; background-color: #e8f5e9; border: 2px dashed #4caf50 !important; }
 
         #map-container { height: 500px; width: 100%; border-radius: 24px; border: 3px solid #e8f5e9; overflow: hidden; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
         .moving-character { z-index: 1000 !important; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3)); }
@@ -153,9 +155,6 @@
         .btn-submit { width: 100%; background: var(--primary); color: white; padding: 15px; border: none; border-radius: 20px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(76,175,80,0.3); transition: 0.2s;}
         .btn-submit:disabled { background: #a5d6a7; cursor: not-allowed; }
         
-        .pac-container { z-index: 10005 !important; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); font-family: 'Malgun Gothic', sans-serif; border: none; overflow: hidden;}
-        .pac-item { padding: 12px 10px; font-size: 14px; cursor: pointer; }
-
         @media (max-width: 600px) {
             .hero-title { font-size: 20px; }
             .hero-date { font-size: 11.5px; }
@@ -369,6 +368,8 @@
     </div>
 </div>
 
+<!-- ✨ 드래그 앤 드롭을 위한 Sortable.js 라이브러리 추가 -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
@@ -758,15 +759,24 @@
         return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
     }
 
+    // ✨ 정렬 로직: 드래그 앤 드롭으로 저장된 순서를 최우선으로 적용 (무조건 맨 끝에 추가)
     function renderPlacesForCurrentDate() {
         let filtered = allPlaces.filter(p => p.visit_date === currentSelectedDate);
+        let savedOrder = JSON.parse(localStorage.getItem(`js_planner_order_${CURRENT_TRIP}_${currentSelectedDate}`) || "[]");
         
         filtered.sort((a, b) => {
-            if(a.visit_time && b.visit_time) return a.visit_time.localeCompare(b.visit_time);
-            if(a.visit_time && !b.visit_time) return -1;
-            if(!a.visit_time && b.visit_time) return 1;
-            return a.id - b.id;
+            let idxA = savedOrder.indexOf(a.id);
+            let idxB = savedOrder.indexOf(b.id);
+            
+            if (idxA === -1 && idxB === -1) return a.id - b.id; // 둘 다 신규 추가 시
+            if (idxA === -1) return 1;  // a가 신규 추가된 거면 무조건 맨 끝으로
+            if (idxB === -1) return -1; // b가 신규 추가된 거면 무조건 맨 끝으로
+            return idxA - idxB;         // 저장된 순서대로 정렬
         });
+
+        // 현재 정렬된 상태를 다시 덮어써서 최신 상태 유지
+        savedOrder = filtered.map(p => p.id);
+        localStorage.setItem(`js_planner_order_${CURRENT_TRIP}_${currentSelectedDate}`, JSON.stringify(savedOrder));
 
         for(let i = 0; i < filtered.length; i++) {
             if(!filtered[i].visit_time) {
@@ -790,7 +800,8 @@
         if(mapInitialized) renderMapMarkers(filtered);
     }
 
-    // ✨ 일정 카드 100% 꽉 차게 복원 + 교통편 뱃지 정중앙 정렬 완벽 계산
+    let scheduleSortable = null;
+
     function renderScheduleList(places) {
         const listDiv = document.getElementById('schedule-list');
         let html = '';
@@ -806,18 +817,20 @@
             let isLast = (index === places.length - 1);
 
             html += `
-            <div class="schedule-item">
+            <div class="schedule-item" data-id="${p.id}" style="margin-bottom: ${isLast ? '25px' : '0'};">
                 ${!isLast ? `<div style="position: absolute; left: 18px; top: 20px; bottom: -20px; width: 4px; background: #c8e6c9; z-index: 1; border-radius: 2px;"></div>` : ''}
                 <div class="schedule-icon ${p.category}"><span class="material-symbols-outlined">${iconName}</span></div>
                 <div style="flex: 1; margin-left: 15px; display: flex; flex-direction: column; min-width: 0;">
                     <div class="schedule-card" style="margin-bottom: 0;">
-                        <div style="display:flex; justify-content:space-between;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
                             <div class="s-time" style="color: ${p.visit_time ? 'var(--primary-dark)' : '#ff9800'}">
                                 ${p.computed_time} ${!p.visit_time ? '<span style="font-size:11px; font-weight:normal;">(자동)</span>' : ''}
                             </div>
-                            <div>
-                                <button style="background:none; border:none; cursor:pointer; color:#888;" onclick="openEditModal(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
-                                <button style="background:none; border:none; cursor:pointer; color:#d32f2f;" onclick="deletePlace(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+                            <div style="display:flex; align-items:center;">
+                                <button style="background:none; border:none; cursor:pointer; color:#888; padding:2px;" onclick="openEditModal(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
+                                <button style="background:none; border:none; cursor:pointer; color:#d32f2f; padding:2px;" onclick="deletePlace(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+                                <!-- ✨ 드래그 앤 드롭을 위한 핸들 아이콘 (三 모양) -->
+                                <span class="material-symbols-outlined drag-handle" style="cursor: grab; color: #ccc; font-size:22px; margin-left:4px;">drag_indicator</span>
                             </div>
                         </div>
                         <div class="s-title">${p.place_name}</div>
@@ -867,6 +880,23 @@
             </div>`;
         });
         listDiv.innerHTML = html;
+
+        // ✨ Sortable.js를 이용한 드래그 앤 드롭 초기화
+        if (scheduleSortable) scheduleSortable.destroy();
+        
+        scheduleSortable = new Sortable(listDiv, {
+            animation: 150,
+            handle: '.drag-handle', // 우측 상단의 三 아이콘을 잡아야만 드래그 됨
+            ghostClass: 'sortable-ghost',
+            onEnd: function () {
+                let newOrder = [];
+                listDiv.querySelectorAll('.schedule-item').forEach(item => {
+                    newOrder.push(parseInt(item.getAttribute('data-id')));
+                });
+                localStorage.setItem(`js_planner_order_${CURRENT_TRIP}_${currentSelectedDate}`, JSON.stringify(newOrder));
+                renderPlacesForCurrentDate(); // 순서 바꾼 즉시 시간 자동 재계산!
+            }
+        });
     }
 
     let currentMarkers = []; 
