@@ -99,12 +99,12 @@
         .schedule-icon.식당 { background: #fff3e0; color: #f57c00; }
         .schedule-icon.공항 { background: #e8eaf6; color: #3f51b5; }
         
-        .schedule-card { background: white; padding: 15px 18px; border-radius: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; }
+        /* ✨ 카드 너비를 100%로 복구! */
+        .schedule-card { width: 100%; background: white; padding: 15px 18px; border-radius: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #f0f0f0; }
         .s-time { font-weight: 900; color: var(--primary); font-size: 16px; margin-bottom: 5px; }
         .s-title { font-size: 17px; font-weight: bold; margin-bottom: 10px; color: var(--text-main); }
         .s-btn { display: flex; align-items: center; gap: 4px; padding: 8px 12px; border-radius: 25px; border: 1px solid #e0e0e0; font-size: 12px; background: white; cursor: pointer; transition: 0.2s; font-weight: bold; color: var(--text-sub);}
         
-        /* ✨ 정중앙 정렬을 위해 position: relative 로 복구된 디자인 코드 */
         .transit-badge { padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.2s; border: 2px solid #e0e0e0; background: white; color: #333; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 4px; z-index: 2; position: relative; }
         .transit-badge:hover { transform: scale(1.05); }
 
@@ -790,7 +790,7 @@
         if(mapInitialized) renderMapMarkers(filtered);
     }
 
-    // ✨ 정중앙 배치 CSS 완벽 복원 (position: relative로 감싸기)
+    // ✨ 일정 카드 100% 꽉 차게 복원 + 교통편 뱃지 정중앙 정렬 완벽 계산
     function renderScheduleList(places) {
         const listDiv = document.getElementById('schedule-list');
         let html = '';
@@ -806,62 +806,65 @@
             let isLast = (index === places.length - 1);
 
             html += `
-            <div class="schedule-item" style="margin-bottom: ${isLast ? '25px' : '0'};">
-                ${!isLast ? `<div style="position: absolute; left: 18px; top: 35px; bottom: -15px; width: 4px; background: #c8e6c9; z-index: 1; border-radius: 2px;"></div>` : ''}
+            <div class="schedule-item">
+                ${!isLast ? `<div style="position: absolute; left: 18px; top: 20px; bottom: -20px; width: 4px; background: #c8e6c9; z-index: 1; border-radius: 2px;"></div>` : ''}
                 <div class="schedule-icon ${p.category}"><span class="material-symbols-outlined">${iconName}</span></div>
-                <div class="schedule-card" style="margin-bottom: ${isLast ? '0' : '15px'};">
-                    <div style="display:flex; justify-content:space-between;">
-                        <div class="s-time" style="color: ${p.visit_time ? 'var(--primary-dark)' : '#ff9800'}">
-                            ${p.computed_time} ${!p.visit_time ? '<span style="font-size:11px; font-weight:normal;">(자동)</span>' : ''}
+                <div style="flex: 1; margin-left: 15px; display: flex; flex-direction: column; min-width: 0;">
+                    <div class="schedule-card" style="margin-bottom: 0;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <div class="s-time" style="color: ${p.visit_time ? 'var(--primary-dark)' : '#ff9800'}">
+                                ${p.computed_time} ${!p.visit_time ? '<span style="font-size:11px; font-weight:normal;">(자동)</span>' : ''}
+                            </div>
+                            <div>
+                                <button style="background:none; border:none; cursor:pointer; color:#888;" onclick="openEditModal(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
+                                <button style="background:none; border:none; cursor:pointer; color:#d32f2f;" onclick="deletePlace(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+                            </div>
                         </div>
-                        <div>
-                            <button style="background:none; border:none; cursor:pointer; color:#888;" onclick="openEditModal(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
-                            <button style="background:none; border:none; cursor:pointer; color:#d32f2f;" onclick="deletePlace(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+                        <div class="s-title">${p.place_name}</div>
+                        <div class="s-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}')" style="width:fit-content; cursor:pointer;">
+                            <span class="material-symbols-outlined" style="font-size:16px;">directions</span> 길찾기
                         </div>
                     </div>
-                    <div class="s-title">${p.place_name}</div>
-                    <div class="s-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}')" style="width:fit-content; cursor:pointer;">
-                        <span class="material-symbols-outlined" style="font-size:16px;">directions</span> 길찾기
-                    </div>
+                    
+                    ${!isLast ? (() => {
+                        let nextP = places[index+1];
+                        let rawData = getTransitMode(p.id, nextP.id);
+                        let mode = 'walk', memo = '', time = '';
+                        
+                        if(rawData) {
+                            try {
+                                let d = JSON.parse(rawData);
+                                mode = d.mode || 'walk'; memo = d.memo || ''; time = d.time || '';
+                            } catch(e) { mode = rawData; }
+                        }
+
+                        let emoji = '🚶'; let modeStr = '도보';
+                        if(mode === 'car') { emoji = '🚗'; modeStr = '자차'; }
+                        if(mode === 'bus') { emoji = '🚌'; modeStr = '버스'; }
+                        if(mode === 'subway') { emoji = '🚇'; modeStr = '지하철'; }
+                        if(mode === 'taxi') { emoji = '🚕'; modeStr = '택시'; }
+                        
+                        let displayStr = `${emoji} `;
+                        if(memo) { displayStr += `${memo} `; } 
+                        else if (mode === 'walk' || mode === 'taxi' || mode === 'car') { displayStr += `${modeStr} `; }
+                        else { displayStr += `${modeStr} `; }
+                        
+                        if(time) { displayStr += `${time}`; }
+                        
+                        displayStr = displayStr.trim();
+                        if(displayStr === emoji) displayStr = `${emoji} 교통편 추가`; 
+
+                        return `
+                        <div style="position: relative; height: 70px; display: flex; align-items: center; justify-content: center; z-index: 2; width: 100%;">
+                            <div style="position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: #333; z-index: -1; transform: translateX(-50%);"></div>
+                            <button class="transit-badge" onclick="openTransitModal(${p.id}, ${nextP.id})">
+                                ${displayStr}
+                            </button>
+                        </div>
+                        `;
+                    })() : '<div style="height:25px;"></div>'}
                 </div>
             </div>`;
-
-            if (!isLast) {
-                let nextP = places[index+1];
-                let rawData = getTransitMode(p.id, nextP.id);
-                let mode = 'walk', memo = '', time = '';
-                
-                if(rawData) {
-                    try {
-                        let d = JSON.parse(rawData);
-                        mode = d.mode || 'walk'; memo = d.memo || ''; time = d.time || '';
-                    } catch(e) { mode = rawData; }
-                }
-
-                let emoji = '🚶'; let modeStr = '도보';
-                if(mode === 'car') { emoji = '🚗'; modeStr = '자차'; }
-                if(mode === 'bus') { emoji = '🚌'; modeStr = '버스'; }
-                if(mode === 'subway') { emoji = '🚇'; modeStr = '지하철'; }
-                if(mode === 'taxi') { emoji = '🚕'; modeStr = '택시'; }
-                
-                let displayStr = `${emoji} `;
-                if(memo) { displayStr += `${memo} `; } 
-                else if (mode === 'walk' || mode === 'taxi' || mode === 'car') { displayStr += `${modeStr} `; }
-                else { displayStr += `${modeStr} `; }
-                
-                if(time) { displayStr += `${time}`; }
-                
-                displayStr = displayStr.trim();
-                if(displayStr === emoji) displayStr = `${emoji} 교통편 추가`; 
-
-                html += `
-                <div style="position: relative; height: 60px; display: flex; align-items: center; justify-content: center; z-index: 2; margin-bottom: 15px;">
-                    <div style="position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: #333; z-index: -1;"></div>
-                    <button class="transit-badge" onclick="openTransitModal(${p.id}, ${nextP.id})">
-                        ${displayStr}
-                    </button>
-                </div>`;
-            }
         });
         listDiv.innerHTML = html;
     }
