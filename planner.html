@@ -78,7 +78,6 @@
         .photo-upload-btn { position: absolute; top: 15px; right: 15px; z-index: 10; background: rgba(0,0,0,0.5); color: white; border: 1px solid rgba(255,255,255,0.3); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
         .tabs { display: flex; background: white; padding: 10px 20px; gap: 8px; border-bottom: 1px solid #ddd; }
-        /* 탭 버튼 3개 정렬 */
         .tab-btn { flex: 1; padding: 12px 5px; border: none; border-radius: 30px; font-weight: bold; font-size: 14px; background: var(--primary-light); color: var(--primary-dark); transition: 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;}
         .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(76,175,80,0.3); }
 
@@ -105,13 +104,12 @@
         .s-title { font-size: 17px; font-weight: bold; margin-bottom: 10px; color: var(--text-main); }
         .s-btn { display: flex; align-items: center; gap: 4px; padding: 8px 12px; border-radius: 25px; border: 1px solid #e0e0e0; font-size: 12px; background: white; cursor: pointer; transition: 0.2s; font-weight: bold; color: var(--text-sub);}
         
-        .transit-badge { padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.2s; border: 2px solid #e0e0e0; background: white; color: #333; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 4px; z-index: 2; position: relative; }
-        .transit-badge:hover { transform: scale(1.05); }
+        .transit-badge { position: absolute; left: 20px; bottom: -30px; transform: translate(-50%, 50%); z-index: 2; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.2s; border: 2px solid #e0e0e0; background: white; color: #333; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+        .transit-badge:hover { transform: translate(-50%, 50%) scale(1.05); }
 
         #map-container { height: 500px; width: 100%; border-radius: 24px; border: 3px solid #e8f5e9; overflow: hidden; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
         .moving-character { z-index: 1000 !important; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3)); }
         
-        /* 여행 지갑(보관함) 탭 CSS */
         .wallet-section-title { font-size: 18px; font-weight: 900; color: var(--primary-dark); margin: 20px 0 10px 0; display: flex; align-items: center; gap: 5px; }
         
         .flight-card { background: white; border-radius: 20px; border: 2px solid #e0e0e0; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; }
@@ -222,11 +220,9 @@
     <div class="tabs">
         <button class="tab-btn" id="btn-tab-overview" onclick="switchTab('overview')"><span class="material-symbols-outlined">map</span> 오버뷰</button>
         <button class="tab-btn active" id="btn-tab-schedule" onclick="switchTab('schedule')"><span class="material-symbols-outlined">receipt_long</span> 일정</button>
-        <!-- ✨ 세 번째 탭 '여행 지갑(보관함)' 추가! -->
         <button class="tab-btn" id="btn-tab-wallet" onclick="switchTab('wallet')"><span class="material-symbols-outlined">wallet</span> 여행 지갑</button>
     </div>
 
-    <!-- 일정 탭 날짜 띠 -->
     <div class="date-strip" id="dynamic-date-strip"></div>
 
     <div class="content-area">
@@ -245,7 +241,6 @@
             <div id="map-container"></div>
         </div>
 
-        <!-- ✨ 여행 지갑 탭 내용 -->
         <div id="tab-wallet" class="tab-content">
             <div class="wallet-section-title">✈️ 항공편</div>
             <div id="wallet-flight-list"></div>
@@ -342,7 +337,7 @@
     </div>
 </div>
 
-<!-- ✨ 모달: 항공편 추가 -->
+<!-- 모달: 항공편 추가 -->
 <div id="add-flight-modal" class="modal-overlay" onclick="closeModal(event, 'add-flight-modal')">
     <div class="modal-content">
         <button class="modal-close" onclick="closeModal(event, 'add-flight-modal', true)">&times;</button>
@@ -362,7 +357,7 @@
     </div>
 </div>
 
-<!-- ✨ 모달: 서류 추가 -->
+<!-- 모달: 서류 추가 -->
 <div id="add-doc-modal" class="modal-overlay" onclick="closeModal(event, 'add-doc-modal')">
     <div class="modal-content">
         <button class="modal-close" onclick="closeModal(event, 'add-doc-modal', true)">&times;</button>
@@ -373,7 +368,7 @@
     </div>
 </div>
 
-<!-- ✨ 모달: 이미지(서류) 보기 -->
+<!-- 모달: 이미지(서류) 보기 -->
 <div id="view-doc-modal" class="modal-overlay" onclick="closeModal(event, 'view-doc-modal')">
     <div class="modal-content" style="text-align:center; background:transparent; box-shadow:none; max-width:90vw;">
         <button class="modal-close" onclick="closeModal(event, 'view-doc-modal', true)" style="color:white; background:rgba(0,0,0,0.5); border-radius:50%; top:-10px; right:-10px;">&times;</button>
@@ -608,7 +603,7 @@
 
         renderDateStrip(dest, startDate, endDate);
         loadPlacesData();
-        loadWalletData(); // ✨ 탭 열 때 여행 지갑 로드
+        loadWalletData();
     }
 
     function renderDateStrip(dest, start, end) {
@@ -634,8 +629,6 @@
             curr.setDate(curr.getDate() + 1);
             first = false;
         }
-        
-        // 지갑 탭에서 일정 탭으로 돌아왔을 때 처리용
         document.getElementById('dynamic-date-strip').style.display = 'flex';
     }
 
@@ -646,14 +639,12 @@
         renderPlacesForCurrentDate();
     }
 
-    // ✨ 세 번째 탭 스위칭 로직 반영
     function switchTab(tabName) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         document.getElementById(`btn-tab-${tabName}`).classList.add('active');
         document.getElementById(`tab-${tabName}`).classList.add('active');
         
-        // 지갑 탭일때는 날짜 띠를 숨김
         if (tabName === 'wallet') {
             document.getElementById('dynamic-date-strip').style.display = 'none';
         } else {
@@ -919,6 +910,18 @@
         }
     }
 
+    // ✨ 점 2개(직선)일 때 부드러운 애니메이션을 위해 점을 늘려주는 마법의 보간법 엔진
+    function interpolatePoints(p1, p2, numPoints = 100) {
+        let pts = [];
+        for(let i=0; i<=numPoints; i++) {
+            pts.push([
+                p1[0] + (p2[0] - p1[0]) * (i/numPoints),
+                p1[1] + (p2[1] - p1[1]) * (i/numPoints)
+            ]);
+        }
+        return pts;
+    }
+
     async function fetchAndDrawRoute(placesList) {
         if(polyline) mainMap.removeLayer(polyline);
         if(movingMarker) mainMap.removeLayer(movingMarker);
@@ -945,11 +948,16 @@
                 let data = await res.json();
                 if(data.code === 'Ok' && data.routes.length > 0) {
                     segmentCoords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                    // ✨ 거리가 멀어서 점이 몇 개 없을 때 (순간이동 방지) 
+                    if(segmentCoords.length < 10) {
+                        segmentCoords = interpolatePoints([p1.lat, p1.lng], [p2.lat, p2.lng], 100);
+                    }
                 } else {
-                    segmentCoords = [[p1.lat, p1.lng], [p2.lat, p2.lng]];
+                    // 길찾기 실패 시에도 순간이동 방지 (직선을 100개로 쪼갬)
+                    segmentCoords = interpolatePoints([p1.lat, p1.lng], [p2.lat, p2.lng], 100);
                 }
             } catch(e) {
-                segmentCoords = [[p1.lat, p1.lng], [p2.lat, p2.lng]];
+                segmentCoords = interpolatePoints([p1.lat, p1.lng], [p2.lat, p2.lng], 100);
             }
             detailedRouteSegments.push({ mode: mode, coords: segmentCoords });
             allLatLngs.push(...segmentCoords);
@@ -1058,13 +1066,9 @@
         }
     }
 
-    // ==========================================
-    // ✨ 여행 지갑 (항공편 및 서류) 로컬 저장 로직
-    // ==========================================
     function loadWalletData() {
         let wData = JSON.parse(localStorage.getItem(`js_planner_wallet_${CURRENT_TRIP}`) || '{"flights":[], "docs":[]}');
         
-        // 항공편 렌더링
         let fHtml = '';
         wData.flights.forEach((f, idx) => {
             fHtml += `
@@ -1092,7 +1096,6 @@
         });
         document.getElementById('wallet-flight-list').innerHTML = fHtml;
 
-        // 서류 렌더링
         let dHtml = '';
         wData.docs.forEach((d, idx) => {
             dHtml += `
@@ -1150,7 +1153,6 @@
         document.getElementById('add-doc-modal').style.display = 'flex';
     }
 
-    // 이미지 파일을 줄여서 로컬 스토리지에 저장하는 마법!
     function saveDoc() {
         let title = document.getElementById('doc-title').value || '제목 없는 서류';
         let fileInput = document.getElementById('doc-file');
@@ -1164,7 +1166,6 @@
         reader.onload = function(e) {
             let img = new Image();
             img.onload = function() {
-                // 용량 초과 방지를 위해 이미지 압축
                 let canvas = document.createElement('canvas');
                 let MAX_WIDTH = 800;
                 let width = img.width; let height = img.height;
