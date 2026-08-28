@@ -285,7 +285,8 @@
         </div>
         
         <!-- ✨ 낡은 input 태그 대신 최신 Web Component 태그로 교체 -->
-        <div class="input-group" style="position:relative; background: white; border: 2px solid var(--primary); border-radius: 16px; overflow: hidden; padding-bottom: 5px;">
+        <!-- ✨ overflow: hidden 삭제 완료! 이제 검색 목록이 시원하게 아래로 뻗어 나갑니다! -->
+        <div class="input-group" style="position:relative; background: white; border: 2px solid var(--primary); border-radius: 16px; padding-bottom: 5px;">
             <label style="padding: 10px 10px 0 10px;">장소 검색 (구글 맵)</label>
             <gmp-place-autocomplete id="map-search-input" placeholder="여기에 검색어를 입력하세요" style="display: block; width: 100%; border: none; outline: none; padding: 5px 15px; font-size: 15px; font-weight: bold; background: white;"></gmp-place-autocomplete>
         </div>
