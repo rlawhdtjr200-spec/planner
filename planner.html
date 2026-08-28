@@ -107,7 +107,6 @@
         .transit-badge { padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.2s; border: 2px solid #e0e0e0; background: white; color: #333; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 4px; z-index: 2; position: relative; }
         .transit-badge:hover { transform: scale(1.05); }
 
-        /* ✨ 드래그 중에 보여질 가짜 카드(유령) 스타일 */
         .sortable-ghost { opacity: 0.3; background-color: #e8f5e9; border: 2px dashed #4caf50 !important; }
 
         #map-container { height: 500px; width: 100%; border-radius: 24px; border: 3px solid #e8f5e9; overflow: hidden; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.05);}
@@ -274,12 +273,15 @@
                 <option value="공항">✈️ 공항</option>
             </select>
         </div>
-        <div class="input-group" style="position:relative;">
-            <label>장소 검색 (구글 맵)</label>
-            <input type="text" id="map-search-input" placeholder="여기에 검색어를 입력하세요" style="border: 2px solid var(--primary); background: white;">
+        
+        <!-- ✨ 1. 기존 input을 감싸는 박스에 스타일을 주어 디자인을 유지합니다 -->
+        <div class="input-group" style="position:relative; background: white; border: 2px solid var(--primary); border-radius: 16px; overflow: hidden; padding-bottom: 5px;">
+            <label style="padding: 10px 10px 0 10px;">장소 검색 (구글 맵)</label>
+            <input type="text" id="map-search-input" placeholder="여기에 검색어를 입력하세요" style="display:none;"> <!-- 구버전 인풋은 숨김 -->
         </div>
+
         <input type="hidden" id="place_name">
-        <div id="mini-map" style="height: 150px; width: 100%; border-radius: 16px; border: 2px solid #e0e0e0; margin-bottom: 10px; cursor: crosshair;"></div>
+        <div id="mini-map" style="height: 150px; width: 100%; border-radius: 16px; border: 2px solid #e0e0e0; margin-bottom: 10px; margin-top: 10px; cursor: crosshair;"></div>
         <div style="display:flex; gap:10px;">
             <div class="input-group" style="flex:1;"><input type="number" id="lat" placeholder="위도" readonly style="background:#f0f0f0;"></div>
             <div class="input-group" style="flex:1;"><input type="number" id="lng" placeholder="경도" readonly style="background:#f0f0f0;"></div>
@@ -368,24 +370,50 @@
     </div>
 </div>
 
-<!-- ✨ 드래그 앤 드롭을 위한 Sortable.js 라이브러리 추가 -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 
+<!-- ✨ 2. 최신 구글 맵 방식(New Places API)으로 완전히 바뀐 자바스크립트 코드 -->
 <script>
-    function initAutocomplete() {
-        const input = document.getElementById('map-search-input');
-        const autocomplete = new google.maps.places.Autocomplete(input);
-        autocomplete.addListener('place_changed', function() {
-            const place = autocomplete.getPlace();
-            if (!place.geometry) { alert("정확한 장소를 자동완성 리스트에서 선택해주세요."); return; }
-            const lat = place.geometry.location.lat();
-            const lng = place.geometry.location.lng();
+    async function initAutocomplete() {
+        // 구글 맵스의 새로운 Places 라이브러리(Web Component) 불러오기
+        const { PlaceAutocompleteElement } = await google.maps.importLibrary("places");
+        
+        // 새로운 자동완성 요소 생성
+        const autocomplete = new PlaceAutocompleteElement();
+        
+        // 스타일 적용 (기존 텍스트 상자처럼 깔끔하게 보이도록)
+        autocomplete.style.width = "100%";
+        autocomplete.style.boxSizing = "border-box";
+        autocomplete.style.background = "white";
+        autocomplete.style.padding = "0 10px";
+        
+        // 기존 input 태그를 대체하여 DOM에 삽입
+        const oldInput = document.getElementById('map-search-input');
+        oldInput.parentNode.replaceChild(autocomplete, oldInput);
+
+        // 장소가 선택되었을 때의 이벤트 ('gmp-placeselect')
+        autocomplete.addEventListener('gmp-placeselect', async (event) => {
+            const place = event.place;
+            if (!place) {
+                alert("정확한 장소를 리스트에서 선택해주세요.");
+                return;
+            }
+            
+            // 위치와 이름 정보 명시적으로 가져오기 (새로운 방식의 필수 과정)
+            await place.fetchFields({ fields: ['displayName', 'location'] });
+            
+            const lat = place.location.lat();
+            const lng = place.location.lng();
+            
+            // 입력창에 자동 입력
             document.getElementById('lat').value = lat.toFixed(6);
             document.getElementById('lng').value = lng.toFixed(6);
-            document.getElementById('place_name').value = place.name;
+            document.getElementById('place_name').value = place.displayName;
+            
+            // 미니맵 위치 갱신
             if(miniMap) {
                 miniMap.setView([lat, lng], 15);
                 if(tempMarker) miniMap.removeLayer(tempMarker);
@@ -395,7 +423,8 @@
     }
 </script>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U&libraries=places&callback=initAutocomplete" async defer></script>
+<!-- ✨ 3. v=weekly 속성을 추가하여 최신 버전을 강제 로드합니다 -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U&libraries=places&v=weekly&callback=initAutocomplete" async defer></script>
 
 <script>
     const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev/api"; 
@@ -666,7 +695,10 @@
         document.getElementById('btn-save').innerText = '저장하기';
         document.getElementById('visit_date').value = currentSelectedDate; 
         document.getElementById('visit_time').value = ''; 
-        document.getElementById('map-search-input').value = ''; 
+        
+        // ✨ 새 방식에서는 요소 선택 방식이 다를 수 있지만, 로직 보호를 위해 기존 코드는 try-catch로 감쌉니다.
+        try { document.getElementById('map-search-input').value = ''; } catch(e) {}
+        
         document.getElementById('place_name').value = '';
         document.getElementById('lat').value = ''; document.getElementById('lng').value = '';
         if(tempMarker && miniMap) miniMap.removeLayer(tempMarker);
@@ -682,7 +714,9 @@
         document.getElementById('btn-save').innerText = '수정 완료';
         document.getElementById('visit_date').value = place.visit_date;
         document.getElementById('visit_time').value = place.visit_time;
-        document.getElementById('map-search-input').value = place.place_name; 
+        
+        try { document.getElementById('map-search-input').value = place.place_name; } catch(e) {}
+        
         document.getElementById('place_name').value = place.place_name;
         document.getElementById('category').value = place.category;
         document.getElementById('lat').value = place.lat; document.getElementById('lng').value = place.lng;
@@ -719,7 +753,7 @@
             document.getElementById('lat').value = e.latlng.lat.toFixed(6);
             document.getElementById('lng').value = e.latlng.lng.toFixed(6);
             if(!document.getElementById('place_name').value) {
-                document.getElementById('map-search-input').value = "직접 지정한 위치";
+                try { document.getElementById('map-search-input').value = "직접 지정한 위치"; } catch(e) {}
                 document.getElementById('place_name').value = "직접 지정한 위치";
             }
             if(tempMarker) miniMap.removeLayer(tempMarker);
@@ -759,7 +793,6 @@
         return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
     }
 
-    // ✨ 정렬 로직: 드래그 앤 드롭으로 저장된 순서를 최우선으로 적용 (무조건 맨 끝에 추가)
     function renderPlacesForCurrentDate() {
         let filtered = allPlaces.filter(p => p.visit_date === currentSelectedDate);
         let savedOrder = JSON.parse(localStorage.getItem(`js_planner_order_${CURRENT_TRIP}_${currentSelectedDate}`) || "[]");
@@ -768,13 +801,12 @@
             let idxA = savedOrder.indexOf(a.id);
             let idxB = savedOrder.indexOf(b.id);
             
-            if (idxA === -1 && idxB === -1) return a.id - b.id; // 둘 다 신규 추가 시
-            if (idxA === -1) return 1;  // a가 신규 추가된 거면 무조건 맨 끝으로
-            if (idxB === -1) return -1; // b가 신규 추가된 거면 무조건 맨 끝으로
-            return idxA - idxB;         // 저장된 순서대로 정렬
+            if (idxA === -1 && idxB === -1) return a.id - b.id; 
+            if (idxA === -1) return 1;  
+            if (idxB === -1) return -1; 
+            return idxA - idxB;         
         });
 
-        // 현재 정렬된 상태를 다시 덮어써서 최신 상태 유지
         savedOrder = filtered.map(p => p.id);
         localStorage.setItem(`js_planner_order_${CURRENT_TRIP}_${currentSelectedDate}`, JSON.stringify(savedOrder));
 
@@ -829,7 +861,6 @@
                             <div style="display:flex; align-items:center;">
                                 <button style="background:none; border:none; cursor:pointer; color:#888; padding:2px;" onclick="openEditModal(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">edit</span></button>
                                 <button style="background:none; border:none; cursor:pointer; color:#d32f2f; padding:2px;" onclick="deletePlace(${p.id})"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
-                                <!-- ✨ 드래그 앤 드롭을 위한 핸들 아이콘 (三 모양) -->
                                 <span class="material-symbols-outlined drag-handle" style="cursor: grab; color: #ccc; font-size:22px; margin-left:4px;">drag_indicator</span>
                             </div>
                         </div>
@@ -881,12 +912,11 @@
         });
         listDiv.innerHTML = html;
 
-        // ✨ Sortable.js를 이용한 드래그 앤 드롭 초기화
         if (scheduleSortable) scheduleSortable.destroy();
         
         scheduleSortable = new Sortable(listDiv, {
             animation: 150,
-            handle: '.drag-handle', // 우측 상단의 三 아이콘을 잡아야만 드래그 됨
+            handle: '.drag-handle', 
             ghostClass: 'sortable-ghost',
             onEnd: function () {
                 let newOrder = [];
@@ -894,7 +924,7 @@
                     newOrder.push(parseInt(item.getAttribute('data-id')));
                 });
                 localStorage.setItem(`js_planner_order_${CURRENT_TRIP}_${currentSelectedDate}`, JSON.stringify(newOrder));
-                renderPlacesForCurrentDate(); // 순서 바꾼 즉시 시간 자동 재계산!
+                renderPlacesForCurrentDate(); 
             }
         });
     }
@@ -1050,7 +1080,7 @@
     }
 
     async function submitPlace() {
-        const pName = document.getElementById('place_name').value || document.getElementById('map-search-input').value || "직접 지정한 위치";
+        const pName = document.getElementById('place_name').value || "직접 지정한 위치";
         const data = {
             trip_name: CURRENT_TRIP, 
             visit_date: document.getElementById('visit_date').value,
