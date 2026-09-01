@@ -45,7 +45,6 @@
         .recent-trip-btn { background: white; border: 2px solid #a5d6a7; border-radius: 18px; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; color: var(--primary-dark); font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .recent-trip-btn:hover { transform: translateY(-2px); background: #e8f5e9; }
 
-        /* ✨ 달력 z-index 조정 */
         .cute-calendar { position: fixed !important; top: 15% !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 2000 !important; border-radius: 24px !important; border: 4px solid #a5d6a7 !important; box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important; padding: 15px 15px 10px 15px !important; font-family: 'Malgun Gothic', sans-serif !important; background: white !important; width: auto !important; min-width: 330px !important; box-sizing: border-box !important; }
         .cute-calendar::before, .cute-calendar::after { display: none !important; }
         .cute-calendar .flatpickr-months { background: #e8f5e9; border-radius: 16px; padding: 10px 0; margin-bottom: 10px; position: relative; }
@@ -142,7 +141,6 @@
         .fab-add:hover { transform: scale(1.05); background: var(--primary-dark); }
         @media(max-width: 600px) { .fab-add { right: 20px; } }
 
-        /* ✨ 모달 z-index 낮춤 (장소 검색 목록이 가려지는 문제 해결) */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; justify-content: center; align-items: center; padding: 20px; }
         .modal-content { background: white; padding: 25px 20px; border-radius: 30px; width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; position: relative; }
         .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 28px; color: #888; cursor: pointer; z-index: 100; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; line-height: 1; }
@@ -169,7 +167,7 @@
         }
     </style>
     
-    <!-- ✨ 구글 맵 공식 최신 부트스트랩 로더 (경고창 완벽 제거) -->
+    <!-- ✨ 구글 맵 공식 최신 부트스트랩 로더 -->
     <script>
       (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
         key: "AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U",
@@ -284,8 +282,7 @@
             </select>
         </div>
         
-        <!-- ✨ 낡은 input 태그 대신 최신 Web Component 태그로 교체 -->
-        <!-- ✨ overflow: hidden 삭제 완료! 이제 검색 목록이 시원하게 아래로 뻗어 나갑니다! -->
+        <!-- ✨ overflow: hidden 속성을 삭제하여 검색 결과 목록이 잘리거나 숨겨지는 문제 완벽 해결 -->
         <div class="input-group" style="position:relative; background: white; border: 2px solid var(--primary); border-radius: 16px; padding-bottom: 5px;">
             <label style="padding: 10px 10px 0 10px;">장소 검색 (구글 맵)</label>
             <gmp-place-autocomplete id="map-search-input" placeholder="여기에 검색어를 입력하세요" style="display: block; width: 100%; border: none; outline: none; padding: 5px 15px; font-size: 15px; font-weight: bold; background: white;"></gmp-place-autocomplete>
@@ -386,40 +383,6 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 
-<!-- ✨ 최신 구글 맵 서비스 초기화 스크립트 -->
-<script>
-    async function initGoogleMaps() {
-        try {
-            await google.maps.importLibrary("places");
-            const autocomplete = document.getElementById("map-search-input");
-            
-            autocomplete.addEventListener('gmp-placeselect', async (event) => {
-                const place = event.place;
-                if (!place) return;
-                
-                await place.fetchFields({ fields: ['displayName', 'location'] });
-                
-                const lat = place.location.lat();
-                const lng = place.location.lng();
-                
-                document.getElementById('lat').value = lat.toFixed(6);
-                document.getElementById('lng').value = lng.toFixed(6);
-                document.getElementById('place_name').value = place.displayName;
-                
-                if(miniMap) {
-                    miniMap.setView([lat, lng], 15);
-                    if(tempMarker) miniMap.removeLayer(tempMarker);
-                    tempMarker = L.marker([lat, lng]).addTo(miniMap);
-                }
-            });
-        } catch(e) {
-            console.error("구글 맵 API 로드 실패:", e);
-        }
-    }
-    // 페이지 로드 시 백그라운드에서 구글 맵 바로 준비 완료시키기
-    initGoogleMaps();
-</script>
-
 <script>
     const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev/api"; 
     const FETCH_HEADERS = { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' };
@@ -430,8 +393,45 @@
     let editPlaceId = null; 
     let detailedRouteSegments = []; 
 
+    // ✨ 타이밍 이슈를 해결하기 위해 구글 맵 초기화 로직을 분리!
+    async function initGoogleMaps() {
+        try {
+            await google.maps.importLibrary("places");
+            // 이제 DOM이 확실히 렌더링된 후이므로 요소(map-search-input)를 100% 안전하게 찾습니다!
+            const autocomplete = document.getElementById("map-search-input");
+
+            autocomplete.addEventListener('gmp-placeselect', async (event) => {
+                const place = event.place;
+                if (!place) return;
+
+                // 위치 정보 받아오기
+                await place.fetchFields({ fields: ['displayName', 'location'] });
+
+                const lat = place.location.lat();
+                const lng = place.location.lng();
+
+                // 화면에 정보 꽂아넣기
+                document.getElementById('lat').value = lat.toFixed(6);
+                document.getElementById('lng').value = lng.toFixed(6);
+                document.getElementById('place_name').value = place.displayName;
+
+                // 지도 움직이기
+                if(miniMap) {
+                    miniMap.setView([lat, lng], 15);
+                    if(tempMarker) miniMap.removeLayer(tempMarker);
+                    tempMarker = L.marker([lat, lng]).addTo(miniMap);
+                }
+            });
+        } catch(e) {
+            console.error("구글 맵 API 로드 실패:", e);
+        }
+    }
+
+    // ✨ 페이지가 전부 완전히 다 켜지면 그제서야 안전하게 초기화 실행!
     window.onload = () => {
         loadRecentTrips();
+        initGoogleMaps(); // 여기에 배치하여 검색창을 못 찾는 에러를 완벽 차단!
+        
         const urlParams = new URLSearchParams(window.location.search);
         const t = urlParams.get('trip');
         const s = urlParams.get('start');
@@ -518,18 +518,16 @@
                 
                 const btn = document.createElement('div');
                 btn.className = 'recent-trip-btn';
-                // ✨ 한 줄 정렬을 풀고 위아래 2줄로 예쁘게 정렬하도록 스타일 수정!
                 btn.style.margin = '0'; 
                 btn.style.flex = '1';
                 btn.style.padding = '12px 16px';
                 btn.style.display = 'flex';
-                btn.style.flexDirection = 'column'; // 위아래로 배치
-                btn.style.alignItems = 'flex-start'; // 왼쪽 맞춤
+                btn.style.flexDirection = 'column'; 
+                btn.style.alignItems = 'flex-start'; 
                 btn.style.justifyContent = 'center';
-                btn.style.gap = '5px'; // 위아래 간격
-                btn.style.overflow = 'hidden'; // 삐져나가는 글자 숨김
+                btn.style.gap = '5px'; 
+                btn.style.overflow = 'hidden'; 
                 
-                // ✨ 제목이 길면 ... 으로 표시되고 날짜는 아래에 은은하게 나오게 수정!
                 btn.innerHTML = `
                     <div style="font-size: 15px; font-weight: bold; color: var(--primary-dark); width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left;">
                         📍 ${trip.dest}
@@ -709,7 +707,7 @@
         document.getElementById('visit_date').value = currentSelectedDate; 
         document.getElementById('visit_time').value = ''; 
         
-        try { document.getElementById('map-search-input').value = ''; } catch(e) {}
+        try { document.getElementById('map-search-input').inputValue = ''; } catch(e) {}
         
         document.getElementById('place_name').value = '';
         document.getElementById('lat').value = ''; document.getElementById('lng').value = '';
@@ -727,7 +725,7 @@
         document.getElementById('visit_date').value = place.visit_date;
         document.getElementById('visit_time').value = place.visit_time;
         
-        try { document.getElementById('map-search-input').value = ""; } catch(e) {}
+        try { document.getElementById('map-search-input').inputValue = ''; } catch(e) {}
         
         document.getElementById('place_name').value = place.place_name;
         document.getElementById('category').value = place.category;
@@ -765,7 +763,7 @@
             document.getElementById('lat').value = e.latlng.lat.toFixed(6);
             document.getElementById('lng').value = e.latlng.lng.toFixed(6);
             if(!document.getElementById('place_name').value) {
-                try { document.getElementById('map-search-input').value = ""; } catch(e) {}
+                try { document.getElementById('map-search-input').inputValue = ''; } catch(e) {}
                 document.getElementById('place_name').value = "직접 지정한 위치";
             }
             if(tempMarker) miniMap.removeLayer(tempMarker);
