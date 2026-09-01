@@ -45,7 +45,8 @@
         .recent-trip-btn { background: white; border: 2px solid #a5d6a7; border-radius: 18px; padding: 12px 18px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 5px; color: var(--primary-dark); font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; margin: 0; overflow: hidden; }
         .recent-trip-btn:hover { transform: translateY(-2px); background: #e8f5e9; }
 
-        .cute-calendar { position: fixed !important; top: 15% !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 2000 !important; border-radius: 24px !important; border: 4px solid #a5d6a7 !important; box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important; padding: 15px 15px 10px 15px !important; font-family: 'Malgun Gothic', sans-serif !important; background: white !important; width: auto !important; min-width: 330px !important; box-sizing: border-box !important; }
+        /* ✨ 핵심 수정: z-index를 10000으로 올려서 어떤 배경화면(9999)보다도 맨 앞에 튀어나오게 수정 완료! */
+        .cute-calendar { position: fixed !important; top: 15% !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 10000 !important; border-radius: 24px !important; border: 4px solid #a5d6a7 !important; box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important; padding: 15px 15px 10px 15px !important; font-family: 'Malgun Gothic', sans-serif !important; background: white !important; width: auto !important; min-width: 330px !important; box-sizing: border-box !important; }
         .cute-calendar::before, .cute-calendar::after { display: none !important; }
         .cute-calendar .flatpickr-months { background: #e8f5e9; border-radius: 16px; padding: 10px 0; margin-bottom: 10px; position: relative; }
         .cute-calendar .flatpickr-month { color: #2e7d32; fill: #2e7d32; height: 35px; }
@@ -186,7 +187,8 @@
         <h2 class="landing-subtitle">어디로 여행하고 싶어?</h2>
         <div class="search-wrapper">
             <input type="text" id="dest-input" placeholder="여행지 (예: 삿포로)">
-            <input type="text" id="hidden-cal" style="display:none;">
+            <!-- ✨ 핵심 수정 2: display:none 때문에 달력이 오작동하는 현상을 방지하기 위해 투명 처리 방식으로 변경 -->
+            <input type="text" id="hidden-cal" style="position:absolute; top:-9999px; left:-9999px; opacity:0;">
             <button onclick="openCalendar()">확인</button>
         </div>
         <div class="recent-trips-box" id="recent-trips-container" style="display:none;">
@@ -282,10 +284,8 @@
             </select>
         </div>
         
-        <!-- ✨ 핵심 솔루션: requested-fields 옵션을 HTML에 직접 박아넣어 에러 확률 0%로 만들기! -->
-        <div class="input-group" style="position:relative; background: white; border: 2px solid var(--primary); border-radius: 16px; padding-bottom: 5px;">
-            <label style="padding: 10px 10px 0 10px;">장소 검색 (구글 맵)</label>
-            <gmp-place-autocomplete id="map-search-input" requested-fields="location,displayName" placeholder="여기에 검색어를 입력하세요" style="display: block; width: 100%; border: none; outline: none; padding: 5px 15px; font-size: 15px; font-weight: bold; background: white;"></gmp-place-autocomplete>
+        <div id="search-container" class="input-group" style="position:relative; background: white; border: 2px solid var(--primary); border-radius: 16px; padding-bottom: 5px;">
+            <!-- JS가 여기에 검색창을 동적으로 추가합니다 -->
         </div>
 
         <input type="hidden" id="place_name">
@@ -393,39 +393,37 @@
     let editPlaceId = null; 
     let detailedRouteSegments = []; 
 
-    // ✨ 구글 맵 웹 컴포넌트가 준비될 때까지 기다렸다가 깔끔하게 값을 연결합니다.
     async function initGoogleMaps() {
         try {
             await google.maps.importLibrary("places");
-            // 웹 컴포넌트가 브라우저에 완전히 인식될 때까지 대기 (가장 확실한 방법!)
             await customElements.whenDefined('gmp-place-autocomplete');
             
             const autocomplete = document.getElementById("map-search-input");
             
-            autocomplete.addEventListener('gmp-placeselect', (event) => {
-                const place = event.place;
-                
-                // 만약 구글 클라우드 권한 문제가 있거나 데이터가 누락되었다면 친절하게 알려줍니다.
-                if (!place || !place.location) {
-                    alert("❗ 장소 정보를 불러오지 못했습니다.\n(구글 클라우드에서 'Places API (New)'가 활성화되어 있는지 확인해주세요!)");
-                    return;
-                }
-                
-                // 중간 통신(fetchFields) 없이 이미 HTML에서 요청한 데이터를 즉시 꺼냅니다!
-                const lat = place.location.lat();
-                const lng = place.location.lng();
-                const name = place.displayName || autocomplete.inputValue || "지정된 위치";
+            if(autocomplete) {
+                autocomplete.addEventListener('gmp-placeselect', (event) => {
+                    const place = event.place;
+                    
+                    if (!place || !place.location) {
+                        alert("❗ 장소 정보를 불러오지 못했습니다.\n(구글 클라우드에서 'Places API (New)'가 활성화되어 있는지 확인해주세요!)");
+                        return;
+                    }
+                    
+                    const lat = place.location.lat();
+                    const lng = place.location.lng();
+                    const name = place.displayName || autocomplete.inputValue || "지정된 위치";
 
-                document.getElementById('lat').value = lat.toFixed(6);
-                document.getElementById('lng').value = lng.toFixed(6);
-                document.getElementById('place_name').value = name;
+                    document.getElementById('lat').value = lat.toFixed(6);
+                    document.getElementById('lng').value = lng.toFixed(6);
+                    document.getElementById('place_name').value = name;
 
-                if(miniMap) {
-                    miniMap.setView([lat, lng], 15);
-                    if(tempMarker) miniMap.removeLayer(tempMarker);
-                    tempMarker = L.marker([lat, lng]).addTo(miniMap);
-                }
-            });
+                    if(miniMap) {
+                        miniMap.setView([lat, lng], 15);
+                        if(tempMarker) miniMap.removeLayer(tempMarker);
+                        tempMarker = L.marker([lat, lng]).addTo(miniMap);
+                    }
+                });
+            }
         } catch(e) {
             console.error("구글 맵 API 로드 실패:", e);
         }
