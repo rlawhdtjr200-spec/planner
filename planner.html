@@ -42,7 +42,7 @@
 
         .recent-trips-box { margin-top: 30px; width: 320px; text-align: left; }
         .recent-trips-title { font-size: 14px; color: #2e7d32; font-weight: bold; margin-bottom: 10px; padding-left: 10px; }
-        .recent-trip-btn { background: white; border: 2px solid #a5d6a7; border-radius: 18px; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; color: var(--primary-dark); font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .recent-trip-btn { background: white; border: 2px solid #a5d6a7; border-radius: 18px; padding: 12px 18px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 5px; color: var(--primary-dark); font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; margin: 0; overflow: hidden; }
         .recent-trip-btn:hover { transform: translateY(-2px); background: #e8f5e9; }
 
         .cute-calendar { position: fixed !important; top: 15% !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 2000 !important; border-radius: 24px !important; border: 4px solid #a5d6a7 !important; box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important; padding: 15px 15px 10px 15px !important; font-family: 'Malgun Gothic', sans-serif !important; background: white !important; width: auto !important; min-width: 330px !important; box-sizing: border-box !important; }
@@ -282,9 +282,10 @@
             </select>
         </div>
         
-        <!-- ✨ 자바스크립트가 안전하게 검색창을 꽂아 넣을 수 있도록 뼈대만 남깁니다 -->
-        <div id="search-container" class="input-group" style="position:relative; background: white; border: 2px solid var(--primary); border-radius: 16px; padding-bottom: 5px;">
-            <!-- JS가 여기에 검색창을 동적으로 추가합니다 -->
+        <!-- ✨ 핵심 솔루션: requested-fields 옵션을 HTML에 직접 박아넣어 에러 확률 0%로 만들기! -->
+        <div class="input-group" style="position:relative; background: white; border: 2px solid var(--primary); border-radius: 16px; padding-bottom: 5px;">
+            <label style="padding: 10px 10px 0 10px;">장소 검색 (구글 맵)</label>
+            <gmp-place-autocomplete id="map-search-input" requested-fields="location,displayName" placeholder="여기에 검색어를 입력하세요" style="display: block; width: 100%; border: none; outline: none; padding: 5px 15px; font-size: 15px; font-weight: bold; background: white;"></gmp-place-autocomplete>
         </div>
 
         <input type="hidden" id="place_name">
@@ -392,51 +393,37 @@
     let editPlaceId = null; 
     let detailedRouteSegments = []; 
 
-    // ✨ 타이밍 에러를 100% 차단하는 구글 맵 동적 생성 스크립트!
+    // ✨ 구글 맵 웹 컴포넌트가 준비될 때까지 기다렸다가 깔끔하게 값을 연결합니다.
     async function initGoogleMaps() {
         try {
-            const { PlaceAutocompleteElement } = await google.maps.importLibrary("places");
+            await google.maps.importLibrary("places");
+            // 웹 컴포넌트가 브라우저에 완전히 인식될 때까지 대기 (가장 확실한 방법!)
+            await customElements.whenDefined('gmp-place-autocomplete');
             
-            const container = document.getElementById("search-container");
-            container.innerHTML = '<label style="padding: 10px 10px 0 10px; display:block; font-size:12px; color:var(--primary-dark); font-weight:bold;">장소 검색 (구글 맵)</label>';
+            const autocomplete = document.getElementById("map-search-input");
             
-            const autocomplete = new PlaceAutocompleteElement();
-            autocomplete.id = "map-search-input";
-            
-            // 스타일 셋팅
-            autocomplete.style.display = "block";
-            autocomplete.style.width = "100%";
-            autocomplete.style.border = "none";
-            autocomplete.style.outline = "none";
-            autocomplete.style.padding = "5px 15px";
-            autocomplete.style.fontSize = "15px";
-            autocomplete.style.fontWeight = "bold";
-            autocomplete.style.background = "white";
-            
-            container.appendChild(autocomplete);
-
-            // 사용자가 연관 검색어를 터치(클릭)했을 때 발동!
-            autocomplete.addEventListener('gmp-placeselect', async (event) => {
+            autocomplete.addEventListener('gmp-placeselect', (event) => {
                 const place = event.place;
-                if (!place) return;
+                
+                // 만약 구글 클라우드 권한 문제가 있거나 데이터가 누락되었다면 친절하게 알려줍니다.
+                if (!place || !place.location) {
+                    alert("❗ 장소 정보를 불러오지 못했습니다.\n(구글 클라우드에서 'Places API (New)'가 활성화되어 있는지 확인해주세요!)");
+                    return;
+                }
+                
+                // 중간 통신(fetchFields) 없이 이미 HTML에서 요청한 데이터를 즉시 꺼냅니다!
+                const lat = place.location.lat();
+                const lng = place.location.lng();
+                const name = place.displayName || autocomplete.inputValue || "지정된 위치";
 
-                try {
-                    await place.fetchFields({ fields: ['displayName', 'location'] });
-                    const lat = place.location.lat();
-                    const lng = place.location.lng();
+                document.getElementById('lat').value = lat.toFixed(6);
+                document.getElementById('lng').value = lng.toFixed(6);
+                document.getElementById('place_name').value = name;
 
-                    document.getElementById('lat').value = lat.toFixed(6);
-                    document.getElementById('lng').value = lng.toFixed(6);
-                    document.getElementById('place_name').value = place.displayName || place.name || "선택된 장소";
-
-                    if(miniMap) {
-                        miniMap.setView([lat, lng], 15);
-                        if(tempMarker) miniMap.removeLayer(tempMarker);
-                        tempMarker = L.marker([lat, lng]).addTo(miniMap);
-                    }
-                } catch(e) {
-                    alert("구글 지도 권한 문제로 좌표를 가져오지 못했습니다. 장소를 다시 검색해주세요!");
-                    console.error("좌표 로드 에러:", e);
+                if(miniMap) {
+                    miniMap.setView([lat, lng], 15);
+                    if(tempMarker) miniMap.removeLayer(tempMarker);
+                    tempMarker = L.marker([lat, lng]).addTo(miniMap);
                 }
             });
         } catch(e) {
@@ -444,7 +431,6 @@
         }
     }
 
-    // 화면이 켜지자마자 구글 맵 세팅을 가장 먼저 안전하게 실행!
     window.onload = () => {
         loadRecentTrips();
         initGoogleMaps(); 
@@ -724,6 +710,11 @@
         document.getElementById('visit_date').value = currentSelectedDate; 
         document.getElementById('visit_time').value = ''; 
         
+        try { 
+            const searchInput = document.getElementById('map-search-input');
+            if(searchInput) searchInput.inputValue = ''; 
+        } catch(e) {}
+        
         document.getElementById('place_name').value = '';
         document.getElementById('lat').value = ''; document.getElementById('lng').value = '';
         if(tempMarker && miniMap) miniMap.removeLayer(tempMarker);
@@ -739,6 +730,11 @@
         document.getElementById('btn-save').innerText = '수정 완료';
         document.getElementById('visit_date').value = place.visit_date;
         document.getElementById('visit_time').value = place.visit_time;
+        
+        try { 
+            const searchInput = document.getElementById('map-search-input');
+            if(searchInput) searchInput.inputValue = place.place_name; 
+        } catch(e) {}
         
         document.getElementById('place_name').value = place.place_name;
         document.getElementById('category').value = place.category;
@@ -776,6 +772,10 @@
             document.getElementById('lat').value = e.latlng.lat.toFixed(6);
             document.getElementById('lng').value = e.latlng.lng.toFixed(6);
             if(!document.getElementById('place_name').value) {
+                try { 
+                    const searchInput = document.getElementById('map-search-input');
+                    if(searchInput) searchInput.inputValue = ''; 
+                } catch(e) {}
                 document.getElementById('place_name').value = "직접 지정한 위치";
             }
             if(tempMarker) miniMap.removeLayer(tempMarker);
@@ -1101,7 +1101,6 @@
         moveNext();
     }
 
-    // ✨ 필수 조건 체크 강화 & 안내 메시지 추가!
     async function submitPlace() {
         const pName = document.getElementById('place_name').value || "직접 지정한 위치";
         const latVal = document.getElementById('lat').value;
