@@ -166,14 +166,6 @@
             .s-title { font-size: 15px; }
         }
     </style>
-    
-    <!-- 구글 맵 공식 최신 부트스트랩 로더 -->
-    <script>
-      (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
-        key: "AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U",
-        v: "weekly"
-      });
-    </script>
 </head>
 <body>
 
@@ -259,6 +251,7 @@
     </div>
 </div>
 
+<!-- ✨ 일정 추가 모달 -->
 <div id="add-modal" class="modal-overlay" onclick="closeModal(event, 'add-modal')">
     <div class="modal-content">
         <button class="modal-close" onclick="closeModal(event, 'add-modal', true)">&times;</button>
@@ -282,10 +275,10 @@
             </select>
         </div>
         
-        <!-- ✨ Step 1: HTML에 구글 검색 태그를 단단하게 박아넣어 화면에 완벽하게 렌더링되게 만듭니다! -->
+        <!-- ✨ 100% 보장! 오류 덩어리 웹 컴포넌트 폐기하고 가장 안전한 일반 input 태그로 교체 완료! -->
         <div class="input-group" style="position:relative; background: white; border: 2px solid var(--primary); border-radius: 16px; padding-bottom: 5px;">
             <label style="padding: 10px 10px 0 10px;">장소 검색 (구글 맵)</label>
-            <gmp-place-autocomplete id="map-search-input" requested-fields="location,displayName" placeholder="여기에 검색어를 입력하세요" style="display: block; width: 100%; border: none; outline: none; padding: 5px 15px; font-size: 15px; font-weight: bold; background: white;"></gmp-place-autocomplete>
+            <input type="text" id="map-search-input" placeholder="여기에 검색어를 입력하세요" style="display: block; width: 100%; border: none; outline: none; padding: 5px 15px; font-size: 15px; font-weight: bold; background: white;">
         </div>
 
         <input type="hidden" id="place_name">
@@ -383,6 +376,9 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 
+<!-- ✨ Step 2: 콜백(Callback) 연동을 통해 구글 맵이 100% 로딩된 순간에만 initGoogleMaps를 실행! -->
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U&libraries=places&callback=initGoogleMaps"></script>
+
 <script>
     const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev/api"; 
     const FETCH_HEADERS = { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' };
@@ -393,46 +389,44 @@
     let editPlaceId = null; 
     let detailedRouteSegments = []; 
 
-    // ✨ Step 2: HTML 요소가 완벽하게 준비된 상태에서 이벤트 리스너를 깔끔하게 연동합니다!
-    async function initGoogleMaps() {
-        try {
-            await google.maps.importLibrary("places");
-            await customElements.whenDefined('gmp-place-autocomplete');
-            
-            const autocomplete = document.getElementById("map-search-input");
-            
-            if(autocomplete) {
-                autocomplete.addEventListener('gmp-placeselect', (event) => {
-                    const place = event.place;
-                    
-                    if (!place || !place.location) {
-                        alert("❗ 장소 정보를 불러오지 못했습니다.\n(구글 클라우드 권한을 확인해주세요!)");
-                        return;
-                    }
-                    
-                    const lat = place.location.lat();
-                    const lng = place.location.lng();
-                    const name = place.displayName || autocomplete.inputValue || "지정된 위치";
+    // ✨ 클래식 구글 맵 장소 검색 로직 
+    let gAutocomplete;
+    function initGoogleMaps() {
+        const input = document.getElementById("map-search-input");
+        if (!input) return;
 
-                    document.getElementById('lat').value = lat.toFixed(6);
-                    document.getElementById('lng').value = lng.toFixed(6);
-                    document.getElementById('place_name').value = name;
+        // 안정성 100% 구버전 클래식 Autocomplete 적용
+        gAutocomplete = new google.maps.places.Autocomplete(input);
+        gAutocomplete.setFields(["geometry", "name"]);
 
-                    if(miniMap) {
-                        miniMap.setView([lat, lng], 15);
-                        if(tempMarker) miniMap.removeLayer(tempMarker);
-                        tempMarker = L.marker([lat, lng]).addTo(miniMap);
-                    }
-                });
+        // 사용자가 리스트에서 장소를 클릭했을 때 발동!
+        gAutocomplete.addListener("place_changed", () => {
+            const place = gAutocomplete.getPlace();
+
+            // 사용자가 목록을 클릭하지 않고 엔터만 쳤을 때 방어
+            if (!place.geometry || !place.geometry.location) {
+                alert("❗ 해당 장소의 위치 정보(위도/경도)를 찾을 수 없습니다.\n검색 후 아래에 나오는 [연관 검색어 목록]을 반드시 클릭(터치)해주세요!");
+                return;
             }
-        } catch(e) {
-            console.error("구글 맵 API 로드 실패:", e);
-        }
+
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            const name = place.name || input.value;
+
+            document.getElementById("lat").value = lat.toFixed(6);
+            document.getElementById("lng").value = lng.toFixed(6);
+            document.getElementById("place_name").value = name;
+
+            if (miniMap) {
+                miniMap.setView([lat, lng], 15);
+                if (tempMarker) miniMap.removeLayer(tempMarker);
+                tempMarker = L.marker([lat, lng]).addTo(miniMap);
+            }
+        });
     }
 
     window.onload = () => {
         loadRecentTrips();
-        initGoogleMaps(); 
         
         const urlParams = new URLSearchParams(window.location.search);
         const t = urlParams.get('trip');
@@ -711,7 +705,7 @@
         
         try { 
             const searchInput = document.getElementById('map-search-input');
-            if(searchInput) searchInput.inputValue = ''; 
+            if(searchInput) searchInput.value = ''; 
         } catch(e) {}
         
         document.getElementById('place_name').value = '';
@@ -732,7 +726,7 @@
         
         try { 
             const searchInput = document.getElementById('map-search-input');
-            if(searchInput) searchInput.inputValue = place.place_name; 
+            if(searchInput) searchInput.value = place.place_name; 
         } catch(e) {}
         
         document.getElementById('place_name').value = place.place_name;
@@ -773,7 +767,7 @@
             if(!document.getElementById('place_name').value) {
                 try { 
                     const searchInput = document.getElementById('map-search-input');
-                    if(searchInput) searchInput.inputValue = ''; 
+                    if(searchInput) searchInput.value = ''; 
                 } catch(e) {}
                 document.getElementById('place_name').value = "직접 지정한 위치";
             }
