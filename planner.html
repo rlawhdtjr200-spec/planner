@@ -68,14 +68,16 @@
         .share-btn { display: flex; align-items: center; gap: 4px; background: var(--primary-light); color: var(--primary-dark); border: none; padding: 8px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; }
         .share-btn:hover { background: #c8e6c9; }
 
-        .hero-section { position: relative; height: 220px; background-image: url('https://images.unsplash.com/photo-1542931287-023b922fa89b?auto=format&fit=crop&q=80&w=800'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; color: white; }
+        .hero-section { position: relative; height: 220px; background-color: #333; background-image: url('https://images.unsplash.com/photo-1542931287-023b922fa89b?auto=format&fit=crop&q=80&w=800'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; color: white; transition: background-image 0.3s ease; }
         .hero-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)); }
         .hero-content { position: relative; z-index: 1; }
         .hero-subtitle { font-size: 12px; opacity: 0.9; margin-bottom: 5px; }
         .hero-title { font-size: 24px; font-weight: bold; margin: 0 0 10px 0; }
         .hero-date { font-size: 13px; opacity: 0.9; margin-bottom: 5px; }
         
-        .photo-upload-btn { position: absolute; top: 15px; right: 15px; z-index: 10; background: rgba(0,0,0,0.5); color: white; border: 1px solid rgba(255,255,255,0.3); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        /* ✨ 버튼(button)으로 바꿔서 모달을 띄우도록 수정 */
+        .photo-upload-btn { position: absolute; top: 15px; right: 15px; z-index: 10; background: rgba(0,0,0,0.5); color: white; border: 1px solid rgba(255,255,255,0.3); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; transition: 0.2s; }
+        .photo-upload-btn:hover { background: rgba(0,0,0,0.8); transform: scale(1.05); }
 
         .tabs { display: flex; background: white; padding: 10px 20px; gap: 8px; border-bottom: 1px solid #ddd; }
         .tab-btn { flex: 1; padding: 12px 5px; border: none; border-radius: 30px; font-weight: bold; font-size: 14px; background: var(--primary-light); color: var(--primary-dark); transition: 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;}
@@ -141,7 +143,6 @@
         .fab-add:hover { transform: scale(1.05); background: var(--primary-dark); }
         @media(max-width: 600px) { .fab-add { right: 20px; } }
 
-        /* ✨ 핵심 수정: 모든 모달(팝업)의 우선순위를 10001로 설정하여 무조건 최상단 노출 보장 */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10001; display: none; justify-content: center; align-items: center; padding: 20px; }
         .modal-content { background: white; padding: 25px 20px; border-radius: 30px; width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; position: relative; }
         .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 28px; color: #888; cursor: pointer; z-index: 100; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; line-height: 1; }
@@ -155,7 +156,6 @@
         .btn-submit { width: 100%; background: var(--primary); color: white; padding: 15px; border: none; border-radius: 20px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; box-shadow: 0 4px 12px rgba(76,175,80,0.3); transition: 0.2s;}
         .btn-submit:disabled { background: #a5d6a7; cursor: not-allowed; }
         
-        /* ✨ 사전 방어 조치 1: 구글맵 클래식 연관검색어 창(pac-container)이 모달 뒤에 숨는 것 완벽 차단 + 예쁜 디자인 적용 */
         .pac-container { z-index: 10005 !important; border-radius: 16px !important; margin-top: 5px !important; box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important; border: 2px solid var(--primary) !important; font-family: 'Malgun Gothic', sans-serif !important; overflow: hidden !important; }
         .pac-item { padding: 10px 15px !important; font-size: 14px !important; cursor: pointer !important; }
         .pac-item:hover { background-color: #e8f5e9 !important; }
@@ -172,6 +172,13 @@
             .s-title { font-size: 15px; }
         }
     </style>
+    
+    <script>
+      (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
+        key: "AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U",
+        v: "weekly"
+      });
+    </script>
 </head>
 <body>
 
@@ -209,10 +216,10 @@
 
     <div class="hero-section" id="hero-bg">
         <div class="hero-overlay"></div>
-        <label class="photo-upload-btn" title="사진 변경">
+        <!-- ✨ 1. 사진 변경 버튼 클릭 시 커스텀 모달이 열리도록 변경 -->
+        <button class="photo-upload-btn" title="사진 변경" onclick="openHeroImageModal()">
             <span class="material-symbols-outlined" style="font-size: 20px;">photo_camera</span>
-            <input type="file" accept="image/*" style="display:none;" onchange="changeHeroImage(event)">
-        </label>
+        </button>
         <div class="hero-content">
             <div class="hero-subtitle" style="color:#dcedc8;">민지랑 종석이랑💕 · 2026</div>
             <h1 class="hero-title" id="hero-title-text">삿포로 여행</h1>
@@ -254,6 +261,28 @@
             <div id="wallet-doc-list"></div>
             <button class="add-dashed-btn" onclick="openAddDocModal()"><span class="material-symbols-outlined">add</span> 파일 추가</button>
         </div>
+    </div>
+</div>
+
+<!-- ✨ 2. 배경 사진 변경을 위한 전용 모달 추가 -->
+<div id="hero-image-modal" class="modal-overlay" onclick="closeModal(event, 'hero-image-modal')">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal(event, 'hero-image-modal', true)">&times;</button>
+        <h2 class="modal-title"><span class="material-symbols-outlined">image</span> 배경 사진 변경</h2>
+        
+        <div class="input-group">
+            <label>🔗 Github 이미지 링크 (권장)</label>
+            <input type="text" id="hero-url" placeholder="https://github.com/...">
+        </div>
+        
+        <div style="text-align: center; color: #888; font-size: 12px; margin: 10px 0; font-weight: bold;">--- 또는 내 기기에서 선택 ---</div>
+        
+        <div class="input-group">
+            <label>이미지 파일 첨부</label>
+            <input type="file" id="hero-file" accept="image/*">
+        </div>
+        
+        <button class="btn-submit" onclick="saveHeroImage()">사진 적용하기</button>
     </div>
 </div>
 
@@ -325,7 +354,6 @@
     </div>
 </div>
 
-<!-- ✨ 삭제 모달 Z-index 버그 해결 영역 -->
 <div id="delete-trip-modal" class="modal-overlay" onclick="closeModal(event, 'delete-trip-modal')">
     <div class="modal-content" style="text-align: center; max-width: 300px; padding: 30px 20px;">
         <button class="modal-close" onclick="closeModal(event, 'delete-trip-modal', true)">&times;</button>
@@ -364,7 +392,12 @@
         <button class="modal-close" onclick="closeModal(event, 'add-doc-modal', true)">&times;</button>
         <h2 class="modal-title"><span class="material-symbols-outlined">attach_file</span> 예약 서류 추가</h2>
         <div class="input-group"><label>서류명 (예: 삿포로 호텔 바우처)</label><input type="text" id="doc-title" required></div>
-        <div class="input-group"><label>이미지 캡처 첨부</label><input type="file" id="doc-file" accept="image/*"></div>
+        <div class="input-group">
+            <label>🔗 Github 이미지 링크 (권장)</label>
+            <input type="text" id="doc-url" placeholder="https://github.com/...">
+        </div>
+        <div style="text-align: center; color: #888; font-size: 12px; margin: 10px 0; font-weight: bold;">--- 또는 내 기기에서 선택 ---</div>
+        <div class="input-group"><label>이미지 파일 첨부</label><input type="file" id="doc-file" accept="image/*"></div>
         <button class="btn-submit" onclick="saveDoc()">서류 보관함에 넣기</button>
     </div>
 </div>
@@ -546,29 +579,25 @@
         document.getElementById('delete-trip-modal').style.display = 'flex';
     }
 
-    // ✨ 사전 방어 2: 찌꺼기 데이터 싹 다 완벽하게 청소하는 기능 탑재!
     function confirmDeleteTrip() {
         const pwd = document.getElementById('delete-trip-pwd').value;
         if(pwd === "0000") {
             let saved = JSON.parse(localStorage.getItem('js_planner_trips') || '[]');
             if (tripToDeleteIndex !== null && saved[tripToDeleteIndex]) {
                 const tripNameToDelete = `${saved[tripToDeleteIndex].dest} 여행`;
-                
-                // 1. 해당 여행의 지갑 데이터 청소
                 localStorage.removeItem(`js_planner_wallet_${tripNameToDelete}`);
                 
-                // 2. 해당 여행의 날짜별 순서 데이터 싹 청소
+                // ✨ 3. 추가: 여행 삭제 시 저장된 배경 이미지 캐시 데이터도 깔끔하게 청소!
+                localStorage.removeItem(`js_planner_hero_${tripNameToDelete}`);
+                
                 Object.keys(localStorage).forEach(key => {
                     if (key.startsWith(`js_planner_order_${tripNameToDelete}`) || key.startsWith(`js_planner_transit_${tripNameToDelete}`)) {
                         localStorage.removeItem(key);
                     }
                 });
-
-                // 3. 마지막으로 여행 리스트에서 삭제
                 saved.splice(tripToDeleteIndex, 1);
                 localStorage.setItem('js_planner_trips', JSON.stringify(saved));
             }
-            
             loadRecentTrips();
             closeModal(new Event('click'), 'delete-trip-modal', true);
             alert("찌꺼기 데이터까지 깔끔하게 삭제되었습니다! 🗑️");
@@ -608,6 +637,16 @@
         loadRecentTrips();
     }
 
+    // ✨ 4. 페이지 켜질 때 영구 저장된 배경 사진을 불러오는 로직
+    function loadHeroImage() {
+        let savedImg = localStorage.getItem(`js_planner_hero_${CURRENT_TRIP}`);
+        if (savedImg) {
+            document.getElementById('hero-bg').style.backgroundImage = `url(${savedImg})`;
+        } else {
+            document.getElementById('hero-bg').style.backgroundImage = `url('https://images.unsplash.com/photo-1542931287-023b922fa89b?auto=format&fit=crop&q=80&w=800')`;
+        }
+    }
+
     function startPlanner(dest, startDate, endDate) {
         document.getElementById('landing-view').style.opacity = '0';
         setTimeout(() => {
@@ -639,6 +678,9 @@
         document.getElementById('hero-date-text').innerText = `${displayStart} ~ ${displayEnd} · ${nights}박 ${days}일`;
 
         renderDateStrip(dest, startDate, endDate);
+        
+        // 배경 사진 로드!
+        loadHeroImage();
         loadPlacesData();
         loadWalletData();
     }
@@ -694,11 +736,51 @@
         }
     }
 
-    function changeHeroImage(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) { document.getElementById('hero-bg').style.backgroundImage = `url(${e.target.result})`; };
+    // ✨ 5. 새로 만든 배경 화면 커스텀 팝업 로직
+    function openHeroImageModal() {
+        document.getElementById('hero-url').value = '';
+        document.getElementById('hero-file').value = '';
+        document.getElementById('hero-image-modal').style.display = 'flex';
+    }
+
+    function applyHeroImage(imgData) {
+        document.getElementById('hero-bg').style.backgroundImage = `url(${imgData})`;
+        localStorage.setItem(`js_planner_hero_${CURRENT_TRIP}`, imgData);
+    }
+
+    function saveHeroImage() {
+        let urlInput = document.getElementById('hero-url').value.trim();
+        let fileInput = document.getElementById('hero-file');
+        
+        if(!urlInput && (!fileInput.files || fileInput.files.length === 0)) {
+            alert("Github 링크를 넣거나 이미지 파일을 첨부해주세요!"); return;
+        }
+
+        if (urlInput) {
+            applyHeroImage(urlInput);
+            closeModal(new Event('click'), 'hero-image-modal', true);
+        } else {
+            let file = fileInput.files[0];
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let img = new Image();
+                img.onload = function() {
+                    let canvas = document.createElement('canvas');
+                    let MAX_WIDTH = 1200; // 넓은 커버용이라 화질 유지를 위해 해상도 1200 지원
+                    let width = img.width; let height = img.height;
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    canvas.width = width; canvas.height = height;
+                    let ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    let base64Data = canvas.toDataURL('image/jpeg', 0.6);
+                    
+                    try {
+                        applyHeroImage(base64Data);
+                        closeModal(new Event('click'), 'hero-image-modal', true);
+                    } catch(err) { alert("❗ 용량이 너무 큽니다. 다른 사진을 넣어주세요."); }
+                }
+                img.src = e.target.result;
+            }
             reader.readAsDataURL(file);
         }
     }
@@ -710,10 +792,7 @@
         document.getElementById('visit_date').value = currentSelectedDate; 
         document.getElementById('visit_time').value = ''; 
         
-        try { 
-            const searchInput = document.getElementById('map-search-input');
-            if(searchInput) searchInput.value = ''; 
-        } catch(e) {}
+        document.getElementById('map-search-input').value = ''; 
         
         document.getElementById('place_name').value = '';
         document.getElementById('lat').value = ''; document.getElementById('lng').value = '';
@@ -731,10 +810,7 @@
         document.getElementById('visit_date').value = place.visit_date;
         document.getElementById('visit_time').value = place.visit_time;
         
-        try { 
-            const searchInput = document.getElementById('map-search-input');
-            if(searchInput) searchInput.value = place.place_name; 
-        } catch(e) {}
+        document.getElementById('map-search-input').value = place.place_name; 
         
         document.getElementById('place_name').value = place.place_name;
         document.getElementById('category').value = place.category;
@@ -772,10 +848,7 @@
             document.getElementById('lat').value = e.latlng.lat.toFixed(6);
             document.getElementById('lng').value = e.latlng.lng.toFixed(6);
             if(!document.getElementById('place_name').value) {
-                try { 
-                    const searchInput = document.getElementById('map-search-input');
-                    if(searchInput) searchInput.value = ''; 
-                } catch(e) {}
+                document.getElementById('map-search-input').value = ''; 
                 document.getElementById('place_name').value = "직접 지정한 위치";
             }
             if(tempMarker) miniMap.removeLayer(tempMarker);
@@ -1230,43 +1303,53 @@
 
     function openAddDocModal() {
         document.getElementById('doc-title').value = '';
+        document.getElementById('doc-url').value = '';
         document.getElementById('doc-file').value = '';
         document.getElementById('add-doc-modal').style.display = 'flex';
     }
 
     function saveDoc() {
         let title = document.getElementById('doc-title').value || '제목 없는 서류';
+        let urlInput = document.getElementById('doc-url').value.trim();
         let fileInput = document.getElementById('doc-file');
         
-        if(!fileInput.files || fileInput.files.length === 0) {
-            alert("이미지 파일을 첨부해주세요!"); return;
+        if(!urlInput && (!fileInput.files || fileInput.files.length === 0)) {
+            alert("Github 링크를 넣거나 이미지 파일을 첨부해주세요!"); return;
         }
         
-        let file = fileInput.files[0];
-        let reader = new FileReader();
-        reader.onload = function(e) {
-            let img = new Image();
-            img.onload = function() {
-                let canvas = document.createElement('canvas');
-                let MAX_WIDTH = 800;
-                let width = img.width; let height = img.height;
-                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                canvas.width = width; canvas.height = height;
-                let ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                let base64Data = canvas.toDataURL('image/jpeg', 0.6);
-                
-                let wData = JSON.parse(localStorage.getItem(`js_planner_wallet_${CURRENT_TRIP}`) || '{"flights":[], "docs":[]}');
-                wData.docs.push({ title: title, fileData: base64Data });
-                try {
-                    localStorage.setItem(`js_planner_wallet_${CURRENT_TRIP}`, JSON.stringify(wData));
-                    closeModal(new Event('click'), 'add-doc-modal', true);
-                    loadWalletData();
-                } catch(e) { alert("❗ 용량이 너무 큽니다. 다른 사진을 넣어주세요."); }
+        let wData = JSON.parse(localStorage.getItem(`js_planner_wallet_${CURRENT_TRIP}`) || '{"flights":[], "docs":[]}');
+
+        if (urlInput) {
+            wData.docs.push({ title: title, fileData: urlInput });
+            localStorage.setItem(`js_planner_wallet_${CURRENT_TRIP}`, JSON.stringify(wData));
+            closeModal(new Event('click'), 'add-doc-modal', true);
+            loadWalletData();
+        } else {
+            let file = fileInput.files[0];
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let img = new Image();
+                img.onload = function() {
+                    let canvas = document.createElement('canvas');
+                    let MAX_WIDTH = 800;
+                    let width = img.width; let height = img.height;
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    canvas.width = width; canvas.height = height;
+                    let ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    let base64Data = canvas.toDataURL('image/jpeg', 0.6);
+                    
+                    wData.docs.push({ title: title, fileData: base64Data });
+                    try {
+                        localStorage.setItem(`js_planner_wallet_${CURRENT_TRIP}`, JSON.stringify(wData));
+                        closeModal(new Event('click'), 'add-doc-modal', true);
+                        loadWalletData();
+                    } catch(e) { alert("❗ 용량이 너무 큽니다. 다른 사진을 넣어주세요."); }
+                }
+                img.src = e.target.result;
             }
-            img.src = e.target.result;
+            reader.readAsDataURL(file);
         }
-        reader.readAsDataURL(file);
     }
 
     function deleteDoc(event, idx) {
