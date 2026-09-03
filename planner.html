@@ -75,7 +75,6 @@
         .hero-title { font-size: 24px; font-weight: bold; margin: 0 0 10px 0; }
         .hero-date { font-size: 13px; opacity: 0.9; margin-bottom: 5px; }
         
-        /* ✨ 버튼(button)으로 바꿔서 모달을 띄우도록 수정 */
         .photo-upload-btn { position: absolute; top: 15px; right: 15px; z-index: 10; background: rgba(0,0,0,0.5); color: white; border: 1px solid rgba(255,255,255,0.3); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; transition: 0.2s; }
         .photo-upload-btn:hover { background: rgba(0,0,0,0.8); transform: scale(1.05); }
 
@@ -216,7 +215,6 @@
 
     <div class="hero-section" id="hero-bg">
         <div class="hero-overlay"></div>
-        <!-- ✨ 1. 사진 변경 버튼 클릭 시 커스텀 모달이 열리도록 변경 -->
         <button class="photo-upload-btn" title="사진 변경" onclick="openHeroImageModal()">
             <span class="material-symbols-outlined" style="font-size: 20px;">photo_camera</span>
         </button>
@@ -264,21 +262,21 @@
     </div>
 </div>
 
-<!-- ✨ 2. 배경 사진 변경을 위한 전용 모달 추가 -->
 <div id="hero-image-modal" class="modal-overlay" onclick="closeModal(event, 'hero-image-modal')">
     <div class="modal-content">
         <button class="modal-close" onclick="closeModal(event, 'hero-image-modal', true)">&times;</button>
         <h2 class="modal-title"><span class="material-symbols-outlined">image</span> 배경 사진 변경</h2>
         
         <div class="input-group">
-            <label>🔗 Github 이미지 링크 (권장)</label>
-            <input type="text" id="hero-url" placeholder="https://github.com/...">
+            <label>🔗 Github 이미지 링크 (공유용/권장)</label>
+            <input type="text" id="hero-url" placeholder="https://github.com/... (Public 레포지토리 권장)">
+            <p style="font-size: 11px; color: #888; margin-top: 5px;">* 상대방에게 링크를 보낼 때 사진도 같이 보여주려면 'Public' 저장소에 등록한 Github 이미지 링크를 사용해야 합니다!</p>
         </div>
         
         <div style="text-align: center; color: #888; font-size: 12px; margin: 10px 0; font-weight: bold;">--- 또는 내 기기에서 선택 ---</div>
         
         <div class="input-group">
-            <label>이미지 파일 첨부</label>
+            <label>이미지 파일 첨부 (나만 보기용)</label>
             <input type="file" id="hero-file" accept="image/*">
         </div>
         
@@ -414,8 +412,6 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U&libraries=places&callback=initGoogleMaps"></script>
-
 <script>
     const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev/api"; 
     const FETCH_HEADERS = { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' };
@@ -458,6 +454,7 @@
         });
     }
 
+    // ✨ URL에 있는 배경 주소를 읽어오는 기능이 추가된 window.onload
     window.onload = () => {
         loadRecentTrips();
         
@@ -465,7 +462,11 @@
         const t = urlParams.get('trip');
         const s = urlParams.get('start');
         const e = urlParams.get('end');
-        if(t && s && e) { startPlanner(t, new Date(s), new Date(e)); }
+        const bg = urlParams.get('bg'); // 🌟 주소창에서 bg 파라미터 찾기
+        
+        if(t && s && e) { 
+            startPlanner(t, new Date(s), new Date(e), bg ? decodeURIComponent(bg) : null); 
+        }
     };
 
     function getTransitMode(p1, p2) {
@@ -586,10 +587,7 @@
             if (tripToDeleteIndex !== null && saved[tripToDeleteIndex]) {
                 const tripNameToDelete = `${saved[tripToDeleteIndex].dest} 여행`;
                 localStorage.removeItem(`js_planner_wallet_${tripNameToDelete}`);
-                
-                // ✨ 3. 추가: 여행 삭제 시 저장된 배경 이미지 캐시 데이터도 깔끔하게 청소!
                 localStorage.removeItem(`js_planner_hero_${tripNameToDelete}`);
-                
                 Object.keys(localStorage).forEach(key => {
                     if (key.startsWith(`js_planner_order_${tripNameToDelete}`) || key.startsWith(`js_planner_transit_${tripNameToDelete}`)) {
                         localStorage.removeItem(key);
@@ -607,7 +605,7 @@
     function shareTrip() {
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(() => {
-            alert("🔗 링크가 복사되었습니다!\n카톡으로 보내면 바로 일정을 같이 볼 수 있습니다 🥰");
+            alert("🔗 링크가 복사되었습니다!\n(카톡으로 공유하면 배경화면과 일정을 같이 볼 수 있어요!)");
         });
     }
 
@@ -637,17 +635,21 @@
         loadRecentTrips();
     }
 
-    // ✨ 4. 페이지 켜질 때 영구 저장된 배경 사진을 불러오는 로직
-    function loadHeroImage() {
-        let savedImg = localStorage.getItem(`js_planner_hero_${CURRENT_TRIP}`);
+    // ✨ URL 우선순위 반영하여 이미지 로드
+    function loadHeroImage(bgFromUrl) {
+        let savedImg = bgFromUrl || localStorage.getItem(`js_planner_hero_${CURRENT_TRIP}`);
         if (savedImg) {
             document.getElementById('hero-bg').style.backgroundImage = `url(${savedImg})`;
+            if (bgFromUrl) { // 공유받은 URL로 들어왔다면 내 폰에도 영구저장!
+                localStorage.setItem(`js_planner_hero_${CURRENT_TRIP}`, bgFromUrl);
+            }
         } else {
             document.getElementById('hero-bg').style.backgroundImage = `url('https://images.unsplash.com/photo-1542931287-023b922fa89b?auto=format&fit=crop&q=80&w=800')`;
         }
     }
 
-    function startPlanner(dest, startDate, endDate) {
+    // ✨ 인자에 bgFromUrl 추가
+    function startPlanner(dest, startDate, endDate, bgFromUrl = null) {
         document.getElementById('landing-view').style.opacity = '0';
         setTimeout(() => {
             document.getElementById('landing-view').style.display = 'none';
@@ -664,7 +666,12 @@
             localStorage.setItem('js_planner_trips', JSON.stringify(saved));
         }
 
-        const newUrl = `${window.location.pathname}?trip=${encodeURIComponent(dest)}&start=${startStr}&end=${endStr}`;
+        // ✨ 공유하기를 대비해서 URL 파라미터에 배경화면 주소 엮어주기!
+        let newUrl = `${window.location.pathname}?trip=${encodeURIComponent(dest)}&start=${startStr}&end=${endStr}`;
+        let currentBg = bgFromUrl || localStorage.getItem(`js_planner_hero_${CURRENT_TRIP}`);
+        if (currentBg && currentBg.startsWith('http')) {
+            newUrl += `&bg=${encodeURIComponent(currentBg)}`;
+        }
         window.history.pushState({path: newUrl}, '', newUrl);
 
         const diffTime = Math.abs(endDate - startDate);
@@ -679,8 +686,7 @@
 
         renderDateStrip(dest, startDate, endDate);
         
-        // 배경 사진 로드!
-        loadHeroImage();
+        loadHeroImage(bgFromUrl);
         loadPlacesData();
         loadWalletData();
     }
@@ -736,16 +742,24 @@
         }
     }
 
-    // ✨ 5. 새로 만든 배경 화면 커스텀 팝업 로직
     function openHeroImageModal() {
         document.getElementById('hero-url').value = '';
         document.getElementById('hero-file').value = '';
         document.getElementById('hero-image-modal').style.display = 'flex';
     }
 
+    // ✨ URL 주소 업데이트 추가
     function applyHeroImage(imgData) {
         document.getElementById('hero-bg').style.backgroundImage = `url(${imgData})`;
         localStorage.setItem(`js_planner_hero_${CURRENT_TRIP}`, imgData);
+        
+        // 깃허브(웹) 링크로 등록하면, 위에 주소창 URL도 실시간으로 바꿔줍니다. (공유하기 버튼 누를 때 포함되도록!)
+        if (imgData.startsWith('http')) {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('bg', encodeURIComponent(imgData));
+            const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+            window.history.replaceState({path: newUrl}, '', newUrl);
+        }
     }
 
     function saveHeroImage() {
@@ -766,7 +780,7 @@
                 let img = new Image();
                 img.onload = function() {
                     let canvas = document.createElement('canvas');
-                    let MAX_WIDTH = 1200; // 넓은 커버용이라 화질 유지를 위해 해상도 1200 지원
+                    let MAX_WIDTH = 1200; 
                     let width = img.width; let height = img.height;
                     if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
                     canvas.width = width; canvas.height = height;
