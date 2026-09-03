@@ -412,6 +412,8 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
 
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDKlCzOt9Q_EQ3CZaEMABweZyC2e9sUR8U&libraries=places&callback=initGoogleMaps"></script>
+
 <script>
     const API_BASE_URL = "https://mop-mumbo-appease.ngrok-free.dev/api"; 
     const FETCH_HEADERS = { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' };
@@ -454,7 +456,7 @@
         });
     }
 
-    // ✨ URL에 있는 배경 주소를 읽어오는 기능이 추가된 window.onload
+    // ✨ URL 파라미터 충돌 및 꼬임 완벽 방지 (URLSearchParams 100% 활용)
     window.onload = () => {
         loadRecentTrips();
         
@@ -462,10 +464,10 @@
         const t = urlParams.get('trip');
         const s = urlParams.get('start');
         const e = urlParams.get('end');
-        const bg = urlParams.get('bg'); // 🌟 주소창에서 bg 파라미터 찾기
+        const bg = urlParams.get('bg'); // 자동으로 안전하게 디코딩됩니다!
         
         if(t && s && e) { 
-            startPlanner(t, new Date(s), new Date(e), bg ? decodeURIComponent(bg) : null); 
+            startPlanner(t, new Date(s), new Date(e), bg); 
         }
     };
 
@@ -602,11 +604,33 @@
         } else { alert("❗ 패스워드가 틀렸습니다."); }
     }
 
+    // ✨ 2중 방어망으로 안전하게 텍스트 복사하기 (공유 기능)
     function shareTrip() {
         const url = window.location.href;
-        navigator.clipboard.writeText(url).then(() => {
-            alert("🔗 링크가 복사되었습니다!\n(카톡으로 공유하면 배경화면과 일정을 같이 볼 수 있어요!)");
-        });
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert("🔗 링크가 복사되었습니다!\n\n💡 꿀팁: 카카오톡에 주소를 올릴 때 나오는 '미리보기 사진'은 기본 이미지로 뜹니다.\n하지만 상대방이 [링크를 눌러서 화면에 들어오면] 과장님이 설정하신 예쁜 배경으로 완벽하게 보입니다!");
+            }).catch(() => fallbackCopy(url));
+        } else {
+            fallbackCopy(url);
+        }
+    }
+
+    function fallbackCopy(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            alert("🔗 링크가 복사되었습니다!\n\n💡 꿀팁: 카카오톡에 주소를 올릴 때 나오는 '미리보기 사진'은 기본 이미지로 뜹니다.\n하지만 상대방이 [링크를 눌러서 화면에 들어오면] 과장님이 설정하신 예쁜 배경으로 완벽하게 보입니다!");
+        } catch (err) {
+            alert("❗ 복사를 지원하지 않는 브라우저입니다. 위 주소창의 링크를 꾹 눌러서 직접 복사해주세요.");
+        }
+        document.body.removeChild(textArea);
     }
 
     let fp = flatpickr("#hidden-cal", {
@@ -635,12 +659,12 @@
         loadRecentTrips();
     }
 
-    // ✨ URL 우선순위 반영하여 이미지 로드
     function loadHeroImage(bgFromUrl) {
         let savedImg = bgFromUrl || localStorage.getItem(`js_planner_hero_${CURRENT_TRIP}`);
         if (savedImg) {
-            document.getElementById('hero-bg').style.backgroundImage = `url(${savedImg})`;
-            if (bgFromUrl) { // 공유받은 URL로 들어왔다면 내 폰에도 영구저장!
+            // ✨ 따옴표('') 추가로 CSS 충돌 원천 차단
+            document.getElementById('hero-bg').style.backgroundImage = `url('${savedImg}')`;
+            if (bgFromUrl) { 
                 localStorage.setItem(`js_planner_hero_${CURRENT_TRIP}`, bgFromUrl);
             }
         } else {
@@ -648,7 +672,6 @@
         }
     }
 
-    // ✨ 인자에 bgFromUrl 추가
     function startPlanner(dest, startDate, endDate, bgFromUrl = null) {
         document.getElementById('landing-view').style.opacity = '0';
         setTimeout(() => {
@@ -657,21 +680,29 @@
         }, 500);
 
         CURRENT_TRIP = `${dest} 여행`;
-        const startStr = startDate.toISOString().split('T')[0];
-        const endStr = endDate.toISOString().split('T')[0];
         
+        // 날짜 변환 보정 (시간대 에러 방지용)
+        const startStr = startDate.toLocaleDateString('sv-SE').split(' ')[0]; 
+        const endStr = endDate.toLocaleDateString('sv-SE').split(' ')[0];
+
         let saved = JSON.parse(localStorage.getItem('js_planner_trips') || '[]');
         if(!saved.find(t => t.dest === dest && t.start === startStr)) {
             saved.push({dest, start: startStr, end: endStr});
             localStorage.setItem('js_planner_trips', JSON.stringify(saved));
         }
 
-        // ✨ 공유하기를 대비해서 URL 파라미터에 배경화면 주소 엮어주기!
-        let newUrl = `${window.location.pathname}?trip=${encodeURIComponent(dest)}&start=${startStr}&end=${endStr}`;
+        // ✨ URL 빌더를 순정 기능으로 완전히 대체!
+        const urlBuilder = new URLSearchParams();
+        urlBuilder.set('trip', dest);
+        urlBuilder.set('start', startStr);
+        urlBuilder.set('end', endStr);
+        
         let currentBg = bgFromUrl || localStorage.getItem(`js_planner_hero_${CURRENT_TRIP}`);
         if (currentBg && currentBg.startsWith('http')) {
-            newUrl += `&bg=${encodeURIComponent(currentBg)}`;
+            urlBuilder.set('bg', currentBg);
         }
+        
+        const newUrl = `${window.location.pathname}?${urlBuilder.toString()}`;
         window.history.pushState({path: newUrl}, '', newUrl);
 
         const diffTime = Math.abs(endDate - startDate);
@@ -698,7 +729,7 @@
         const daysArr = ['일','월','화','수','목','금','토'];
 
         while(curr <= end) {
-            let dateStr = curr.toISOString().split('T')[0];
+            let dateStr = curr.toLocaleDateString('sv-SE').split(' ')[0];
             let mm = curr.getMonth() + 1; let dd = curr.getDate();
             let dayName = daysArr[curr.getDay()];
             let activeCls = first ? 'active' : '';
@@ -748,15 +779,14 @@
         document.getElementById('hero-image-modal').style.display = 'flex';
     }
 
-    // ✨ URL 주소 업데이트 추가
+    // ✨ 주소 업데이트 엔진 수리 완료!
     function applyHeroImage(imgData) {
-        document.getElementById('hero-bg').style.backgroundImage = `url(${imgData})`;
+        document.getElementById('hero-bg').style.backgroundImage = `url('${imgData}')`;
         localStorage.setItem(`js_planner_hero_${CURRENT_TRIP}`, imgData);
         
-        // 깃허브(웹) 링크로 등록하면, 위에 주소창 URL도 실시간으로 바꿔줍니다. (공유하기 버튼 누를 때 포함되도록!)
         if (imgData.startsWith('http')) {
             const urlParams = new URLSearchParams(window.location.search);
-            urlParams.set('bg', encodeURIComponent(imgData));
+            urlParams.set('bg', imgData); // 수동 인코딩 삭제 (에러 원인)
             const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
             window.history.replaceState({path: newUrl}, '', newUrl);
         }
